@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ✅ Référence au parent -->
+	<parent>
+		<groupId>com.yowyob</groupId>
+		<artifactId>yowyob-search-backend</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-notification-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>YowYob Notification Service</name>
+	<description>Service temps réel de gestion des notifications push, emails et abonnements, orchestré via Kafka pour une distribution rapide et fiable des alertes, avec personnalisation basée sur les préférences utilisateurs et historique des communications.</description>
+
+	<properties>
+		<java.version>21</java.version>
+		<firebase.version>9.2.0</firebase.version>
+		<web-push.version>5.1.1</web-push.version>
+		<bouncycastle.version>1.70</bouncycastle.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- ✅ Common service OBLIGATOIRE -->
+		<dependency>
+			<groupId>com.yowyob</groupId>
+			<artifactId>yowyob-common-service</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- SPRING BOOT CORE                           -->
+		<!-- ========================================== -->
+
+		<!-- Actuator : Monitoring envoi notifications, taux délivrabilité -->
+		<!-- Métriques: notifications envoyées, échecs, temps traitement -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- JPA : Persistance historique notifications, préférences -->
+		<!-- Tables: notifications, user_preferences, notification_templates -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Redis : Cache tokens FCM, rate limiting notifications -->
+		<!-- Prévention spam: max 10 notifications/user/minute -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<!-- Mail : Envoi emails transactionnels -->
+		<!-- Templates: bienvenue, reset password, alertes importantes -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<!-- Thymeleaf : Templates HTML emails -->
+		<!-- Support variables dynamiques, conditionnels, boucles -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<!-- Validation : Validation format notifications -->
+		<!-- @NotNull, @Size pour titre/message, @Email pour destinataires -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- WebFlux : API réactive haute performance -->
+		<!-- Traitement asynchrone millions notifications/jour -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- APACHE KAFKA - EVENT STREAMING             -->
+		<!-- ========================================== -->
+
+		<!-- Kafka : Consommation événements notification -->
+		<!-- Topics: user.registered, order.completed, payment.failed -->
+		<!-- Production: notification.sent, notification.failed -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- MIGRATION BASE DE DONNÉES                  -->
+		<!-- ========================================== -->
+
+		<!-- Flyway : Versioning schéma notifications -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- NOTIFICATIONS PUSH                         -->
+		<!-- ========================================== -->
+
+		<!-- Firebase Admin : Push notifications Android/iOS -->
+		<!-- FCM (Firebase Cloud Messaging) pour mobile -->
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>${firebase.version}</version>
+		</dependency>
+
+		<!-- Web Push : Notifications navigateur (PWA) -->
+		<!-- Support Chrome, Firefox, Edge, Safari -->
+		<!-- Protocole VAPID pour authentification -->
+		<dependency>
+			<groupId>nl.martijndwars</groupId>
+			<artifactId>web-push</artifactId>
+			<version>${web-push.version}</version>
+		</dependency>
+
+		<!-- Bouncy Castle : Cryptographie Web Push -->
+		<!-- Génération clés VAPID, signature messages -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- WEBSOCKET & TEMPS RÉEL                     -->
+		<!-- ========================================== -->
+
+		<!-- WebSocket : Notifications temps réel dans l'app -->
+		<!-- Connexions persistantes pour updates instantanées -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- TEMPLATING & INTERNATIONALISATION          -->
+		<!-- ========================================== -->
+
+		<!-- Freemarker : Alternative Thymeleaf pour emails complexes -->
+		<!-- Optionnel: activer si besoin templates avancés -->
+		<!-- <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency> -->
+
+		<!-- ========================================== -->
+		<!-- UTILITAIRES                                -->
+		<!-- ========================================== -->
+
+		<!-- Commons Lang : Utilitaires string, date formatting -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- DOCUMENTATION API                          -->
+		<!-- ========================================== -->
+
+		<!-- SpringDoc OpenAPI : Documentation API notifications -->
+		<!-- Swagger UI pour tester envoi notifications -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- RUNTIME & DEVELOPPEMENT                    -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Prometheus : Métriques notifications -->
+		<!-- KPIs: taux succès/échec, latence, volume par canal -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- TESTS                                      -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Reactor Test : Tests flux réactifs -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Kafka Test : Tests consommateurs/producteurs Kafka -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- GreenMail : Mock serveur SMTP pour tests emails -->
+		<!-- Capture emails sans envoi réel -->
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail-spring</artifactId>
+			<version>2.0.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

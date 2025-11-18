@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ✅ Référence au parent -->
+	<parent>
+		<groupId>com.yowyob</groupId>
+		<artifactId>yowyob-search-backend</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-geo-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>YowYob Geo Service</name>
+	<description>Fournit des services spécialisés de géolocalisation incluant le géocodage et géocodage inverse, la recherche spatiale et la gestion des données géographiques via PostGIS, intégrant OpenStreetMap pour un contexte africain optimisé, et exposant des APIs pour les autres services.</description>
+
+	<properties>
+		<java.version>21</java.version>
+		<!-- Versions géospatiales -->
+		<postgis.version>2023.1.0</postgis.version>
+		<jts.version>1.19.0</jts.version>
+		<geotools.version>30.1</geotools.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- ✅ Common service OBLIGATOIRE -->
+		<dependency>
+			<groupId>com.yowyob</groupId>
+			<artifactId>yowyob-common-service</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- SPRING BOOT CORE                           -->
+		<!-- ========================================== -->
+
+		<!-- Actuator : Monitoring et health checks -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- JPA : Persistance avec PostgreSQL/PostGIS -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Redis : Cache géocodage (30 jours TTL) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<!-- Cache : Support abstraction cache Spring -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- WebFlux : Appels réactifs vers Nominatim API (OpenStreetMap) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<!-- Validation : Validation coordonnées, adresses -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- GÉOLOCALISATION - POSTGIS & OPENSTREETMAP  -->
+		<!-- ========================================== -->
+
+		<!-- Hibernate Spatial : Support types geography/geometry dans JPA -->
+		<!-- Permet d'utiliser Point, Polygon, etc. comme types de colonnes -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-spatial</artifactId>
+		</dependency>
+
+		<!-- PostGIS JDBC : Driver PostgreSQL avec extensions spatiales -->
+		<!-- Ajoute les fonctions ST_Distance, ST_DWithin, etc. -->
+		<dependency>
+			<groupId>net.postgis</groupId>
+			<artifactId>postgis-jdbc</artifactId>
+			<version>${postgis.version}</version>
+		</dependency>
+
+		<!-- JTS Core : Java Topology Suite -->
+		<!-- Manipulation de géométries (Point, LineString, Polygon) -->
+		<!-- Calculs de distances, intersections, unions -->
+		<dependency>
+			<groupId>org.locationtech.jts</groupId>
+			<artifactId>jts-core</artifactId>
+			<version>${jts.version}</version>
+		</dependency>
+
+		<!-- GeoTools Main : Outils géospatiaux avancés -->
+		<!-- Transformations de coordonnées, projections cartographiques -->
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-main</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+
+		<!-- GeoTools EPSG : Base de données des systèmes de référence -->
+		<!-- Permet conversions entre WGS84 (GPS), Web Mercator, etc. -->
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-epsg-hsql</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+
+		<!-- GeoTools GeoJSON : Import/Export format GeoJSON -->
+		<!-- Standard pour échanger données géographiques avec frontend -->
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-geojson</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+
+		<!-- GeoTools Referencing : Transformations avancées -->
+		<!-- Nécessaire pour conversions entre systèmes de coordonnées -->
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-referencing</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- MIGRATION BASE DE DONNÉES                  -->
+		<!-- ========================================== -->
+
+		<!-- Flyway : Versioning schéma PostgreSQL/PostGIS -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
+		<!-- Flyway PostgreSQL : Support spécifique PostGIS -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- APACHE KAFKA (Communication avec autres services) -->
+		<!-- ========================================== -->
+
+		<!-- Kafka : Publier événements géolocalisation -->
+		<!-- Ex: location-geocoded, nearby-search-executed -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- UTILITAIRES                                -->
+		<!-- ========================================== -->
+
+		<!-- Apache Commons Lang : Utilitaires String, validation -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<!-- Jackson Databind : Parsing JSON Nominatim API -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- RUNTIME & DEVELOPPEMENT                    -->
+		<!-- ========================================== -->
+
+		<!-- DevTools : Hot reload développement -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Prometheus : Métriques géolocalisation -->
+		<!-- Track: nombre géocodages, temps réponse Nominatim, cache hits -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- PostgreSQL Driver -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Lombok : Réduction boilerplate -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- TESTS                                      -->
+		<!-- ========================================== -->
+
+		<!-- Spring Boot Test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Reactor Test : Tests WebClient réactif -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Kafka Test : Tests publication événements -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- TestContainers PostGIS : Tests avec PostGIS réel -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>1.19.3</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- ========================================== -->
+	<!-- REPOSITORIES                               -->
+	<!-- ========================================== -->
+
+	<repositories>
+		<!-- Spring Snapshots -->
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+
+		<!-- OSGeo : Repository GeoTools et dépendances géospatiales -->
+		<!-- CRITIQUE pour PostGIS, JTS, GeoTools -->
+		<repository>
+			<id>osgeo</id>
+			<name>OSGeo Release Repository</name>
+			<url>https://repo.osgeo.org/repository/release/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

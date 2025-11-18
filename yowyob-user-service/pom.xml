@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ✅ Référence au parent -->
+	<parent>
+		<groupId>com.yowyob</groupId>
+		<artifactId>yowyob-search-backend</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-user-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>YowYob User Service</name>
+	<description>Gestion complète des utilisateurs incluant l'inscription, authentification basée sur JWT, gestion des profils et des rôles, ainsi que la conservation sécurisée des historiques d'activité et préférences utilisateur dans une base relationnelle robuste.</description>
+
+	<properties>
+		<java.version>21</java.version>
+		<jjwt.version>0.12.3</jjwt.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- ✅ Common service OBLIGATOIRE -->
+		<dependency>
+			<groupId>com.yowyob</groupId>
+			<artifactId>yowyob-common-service</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- SPRING BOOT CORE                           -->
+		<!-- ========================================== -->
+
+		<!-- Actuator : Monitoring authentifications, inscriptions -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- JPA : Persistance users, refresh_tokens, roles -->
+		<!-- Tables: users, refresh_tokens, roles, user_roles -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Redis : Blacklist tokens révoqués, sessions actives -->
+		<!-- TTL automatique = durée vie token -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<!-- Mail : Emails vérification, reset password -->
+		<!-- Templates HTML avec Thymeleaf -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<!-- Web : API REST classique (non-réactif suffit) -->
+		<!-- Endpoints: register, login, refresh, profile -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- WebFlux : Pour appels réactifs vers autres services si besoin -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<!-- Validation : Validation email, password fort, username -->
+		<!-- @Email, @NotBlank, @Size, @Pattern -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- SÉCURITÉ - JWT & OAUTH2                    -->
+		<!-- ========================================== -->
+
+		<!-- Spring Security : Authentification, BCrypt password hashing -->
+		<!-- BCrypt strength 12 : ~300ms pour hasher (sécurité vs performance) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- OAuth2 Resource Server : Validation JWT pour endpoints protégés -->
+		<!-- /api/users/me, /api/users/profile nécessitent JWT valide -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+
+		<!-- JJWT : Génération et validation JWT -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- APACHE KAFKA - EVENT STREAMING             -->
+		<!-- ========================================== -->
+
+		<!-- Kafka : Publication événements user.registered, user.login -->
+		<!-- Consommé par: Notification Service (email bienvenue) -->
+		<!--               Analytics Service (statistiques) -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- MIGRATION BASE DE DONNÉES                  -->
+		<!-- ========================================== -->
+
+		<!-- Flyway : Versioning tables users -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- UTILITAIRES                                -->
+		<!-- ========================================== -->
+
+		<!-- Commons Lang : Utilitaires validation, génération tokens -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<!-- Commons Validator : Validation email avancée -->
+		<dependency>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>1.8.0</version>
+		</dependency>
+
+		<!-- Passay : Validation force mot de passe -->
+		<!-- Règles: min 8 chars, majuscule, minuscule, chiffre, spécial -->
+		<dependency>
+			<groupId>org.passay</groupId>
+			<artifactId>passay</artifactId>
+			<version>1.6.4</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- DOCUMENTATION API                          -->
+		<!-- ========================================== -->
+
+		<!-- SpringDoc OpenAPI : Swagger UI -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- RUNTIME & DEVELOPPEMENT                    -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Prometheus : Métriques auth -->
+		<!-- Tracking: inscriptions/jour, connexions réussies vs échouées -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- TESTS                                      -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

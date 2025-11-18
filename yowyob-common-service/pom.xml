@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ✅ Référence au parent -->
+	<parent>
+		<groupId>com.yowyob</groupId>
+		<artifactId>yowyob-search-backend</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-common-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<!-- IMPORTANT: packaging=jar pour bibliothèque partagée -->
+	<packaging>jar</packaging>
+	<name>YowYob Common Service</name>
+	<description>Bibliothèque partagée regroupant les modèles, utilitaires et configurations communes à l'ensemble des microservices pour assurer une cohérence et faciliter la maintenance du code.</description>
+
+	<properties>
+		<java.version>21</java.version>
+		<jjwt.version>0.12.3</jjwt.version>
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
+	</properties>
+
+	<dependencies>
+		<!-- ========================================== -->
+		<!-- SPRING BOOT CORE - OPTIONAL                -->
+		<!-- ========================================== -->
+
+		<!-- Actuator : Health checks communs, métriques personnalisées -->
+		<!-- Utilisé par services consommateurs si nécessaire -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Web : DTOs REST, annotations @RestController -->
+		<!-- Optional car tous services n'ont pas besoin de Web -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Validation : Annotations validation partagées -->
+		<!-- @NotNull, @Email, @Pattern sur DTOs communs -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- JPA : Entités de base communes, auditing -->
+		<!-- BaseEntity, AuditableEntity avec createdAt/updatedAt -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Security : DTOs authentification, utilitaires JWT -->
+		<!-- Classes partagées: JwtUtil, SecurityContextHolder -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- JWT - BIBLIOTHÈQUE PARTAGÉE                -->
+		<!-- ========================================== -->
+
+		<!-- JJWT : Utilitaires JWT réutilisables -->
+		<!-- Classes: JwtTokenProvider, JwtValidator, JwtClaims -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- KAFKA - ÉVÉNEMENTS COMMUNS                 -->
+		<!-- ========================================== -->
+
+		<!-- Kafka : DTOs événements partagés entre services -->
+		<!-- Events: UserRegisteredEvent, OrderCreatedEvent, etc. -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- MAPPING & TRANSFORMATION                   -->
+		<!-- ========================================== -->
+
+		<!-- MapStruct : Mapping Entity <-> DTO -->
+		<!-- Génération code compile-time pour performance -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- UTILITAIRES COMMUNS                        -->
+		<!-- ========================================== -->
+
+		<!-- Jackson : Sérialisation JSON personnalisée -->
+		<!-- Annotations: @JsonFormat, @JsonIgnore, converters custom -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+
+		<!-- Commons Lang : StringUtils, DateUtils, validators -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<!-- Commons Collections : Utilitaires collections -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
+
+		<!-- Guava : Cache, collections immutables, rate limiting -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>33.0.0-jre</version>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- GESTION ERREURS & EXCEPTIONS               -->
+		<!-- ========================================== -->
+
+		<!-- Zalando Problem : RFC 7807 Problem Details -->
+		<!-- Format standardisé erreurs API REST -->
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>problem-spring-web-starter</artifactId>
+			<version>0.29.1</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- DOCUMENTATION & ANNOTATIONS                -->
+		<!-- ========================================== -->
+
+		<!-- SpringDoc : Annotations OpenAPI communes -->
+		<!-- @Schema, @Operation sur DTOs/Controllers partagés -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-common</artifactId>
+			<version>2.3.0</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- OBSERVABILITÉ & TRACING                    -->
+		<!-- ========================================== -->
+
+		<!-- Micrometer : Métriques personnalisées communes -->
+		<!-- Compteurs: requêtes, erreurs, latences -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-core</artifactId>
+		</dependency>
+
+		<!-- Micrometer Tracing : Distributed tracing -->
+		<!-- Correlation IDs entre microservices -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- DÉVELOPPEMENT                              -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Lombok : @Data, @Builder sur DTOs/Entities -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Configuration Processor : Métadonnées @ConfigurationProperties -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ========================================== -->
+		<!-- TESTS                                      -->
+		<!-- ========================================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- AssertJ : Assertions fluides pour tests -->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito : Mocking pour tests unitaires -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<!-- Lombok doit être traité en premier -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<!-- MapStruct après Lombok -->
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
+						</path>
+						<!-- Lombok-MapStruct binding -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<!-- IMPORTANT: Ne PAS utiliser spring-boot-maven-plugin -->
+			<!-- Cette bibliothèque n'est PAS un exécutable autonome -->
+			<!-- Elle sera importée par d'autres services via Maven -->
+
+			<!-- Maven Source Plugin : Génère JAR sources -->
+			<!-- Utile pour débogage dans IDEs -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Maven Javadoc Plugin : Génère JAR documentation -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

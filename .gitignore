@@ -1,0 +1,21 @@
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IntelliJ
+.idea/
+*.iml
+out/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Clés sensibles
+firebase-service-account.json
