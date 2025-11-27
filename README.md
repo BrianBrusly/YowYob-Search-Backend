@@ -1,4 +1,4 @@
-# 🔵 YowYob Search PWA - Backend
+#  YowYob Search PWA - Backend
 
 > **Plateforme de recherche intelligente distribuée** - Projet backend monorepo Spring Boot multi-microservices pour la recherche intelligente YowYob, incluant API Gateway, Search, Crawler, User, Geo, Notification.
  Architecture microservices avec Spring Boot 3.x, Java 21, Elasticsearch, Kafka et géolocalisation avancée
@@ -28,20 +28,20 @@
 
 ---
 
-## 🎯 Vue d'ensemble
+##  Vue d'ensemble
 
 **YowYob Search Backend** est le cœur du moteur de recherche intelligent. Il fournit :
 
-- ✅ **Recherche full-text avancée** avec ranking personnalisé (BM25 + ML)
-- ✅ **Géolocalisation temps réel** avec PostGIS et OpenStreetMap
-- ✅ **Web crawling respectueux** (robots.txt, politeness, sitemap)
-- ✅ **Authentification sécurisée** (JWT + Refresh Tokens + BCrypt)
-- ✅ **Notifications multi-canal** (Email SMTP, Web Push VAPID, FCM)
-- ✅ **Architecture événementielle** (Kafka pour event-driven microservices)
-- ✅ **Cache distribué intelligent** (Redis pour performance optimale)
-- ✅ **Scalabilité horizontale** (design cloud-native Kubernetes-ready)
+-  **Recherche full-text avancée** avec ranking personnalisé (BM25 + ML)
+-  **Géolocalisation temps réel** avec PostGIS et OpenStreetMap
+-  **Web crawling respectueux** (robots.txt, politeness, sitemap)
+-  **Authentification sécurisée** (JWT + Refresh Tokens + BCrypt)
+-  **Notifications multi-canal** (Email SMTP, Web Push VAPID, FCM)
+-  **Architecture événementielle** (Kafka pour event-driven microservices)
+-  **Cache distribué intelligent** (Redis pour performance optimale)
+-  **Scalabilité horizontale** (design cloud-native Kubernetes-ready)
 
-### 🔗 Connexion logique avec les autres repositories
+###  Connexion logique avec les autres repositories
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     ARCHITECTURE GLOBALE                    │
@@ -85,7 +85,7 @@
 
 ---
 
-## 🏗 Architecture
+##  Architecture
 
 ### Structure modulaire Maven Multi-Module
 ```
@@ -93,7 +93,7 @@ yowyob-search-backend/
 │
 ├── pom.xml                           # Parent POM (dependency management)
 │
-├── yowyob-common/                    # 🔧 Module commun partagé
+├── yowyob-common/                    #  Module commun partagé
 │   ├── src/main/java/
 │   │   └── com/yowyob/common/
 │   │       ├── dto/                  # DTOs standards (ApiResponse, PageResponse)
@@ -102,7 +102,7 @@ yowyob-search-backend/
 │   │       └── util/                 # DateUtils, StringUtils, Validators
 │   └── pom.xml
 │
-├── yowyob-api-gateway/               # 🚪 API Gateway (Spring Cloud Gateway)
+├── yowyob-api-gateway/               #  API Gateway (Spring Cloud Gateway)
 │   ├── src/main/java/
 │   │   └── com/yowyob/gateway/
 │   │       ├── config/               # Routes, CORS, Rate Limiting, Circuit Breaker
@@ -112,7 +112,7 @@ yowyob-search-backend/
 │   │   └── application.yml           # Routes dynamiques vers microservices
 │   └── pom.xml
 │
-├── yowyob-search-service/            # 🔍 Search Engine Core
+├── yowyob-search-service/            #  Search Engine Core
 │   ├── src/main/java/
 │   │   └── com/yowyob/search/
 │   │       ├── controller/           # SearchController, SuggestionController
@@ -128,7 +128,7 @@ yowyob-search-backend/
 │   │       └── mappings.json         # Index mapping pour documents
 │   └── pom.xml
 │
-├── yowyob-crawler-service/           # 🕷️ Web Crawler (JSoup + Tika)
+├── yowyob-crawler-service/           #  Web Crawler (JSoup + Tika)
 │   ├── src/main/java/
 │   │   └── com/yowyob/crawler/
 │   │       ├── controller/           # CrawlerController (start/stop/status)
@@ -141,7 +141,7 @@ yowyob-search-backend/
 │   │           └── dto/              # CrawlRequest, CrawlStatus
 │   └── pom.xml
 │
-├── yowyob-user-service/              # 👤 Auth & User Management
+├── yowyob-user-service/              #  Auth & User Management
 │   ├── src/main/java/
 │   │   └── com/yowyob/user/
 │   │       ├── controller/           # AuthController, UserController
@@ -153,7 +153,7 @@ yowyob-search-backend/
 │   │       └── security/             # SecurityConfig, JwtAuthenticationFilter
 │   └── pom.xml
 │
-├── yowyob-geo-service/               # 🌍 Géolocalisation (PostGIS + OSM)
+├── yowyob-geo-service/               #  Géolocalisation (PostGIS + OSM)
 │   ├── src/main/java/
 │   │   └── com/yowyob/geo/
 │   │       ├── controller/           # GeoController
@@ -165,7 +165,7 @@ yowyob-search-backend/
 │   │           └── dto/              # Location, Address, GeoSearchRequest
 │   └── pom.xml
 │
-├── yowyob-notification-service/      # 📬 Notifications multi-canal
+├── yowyob-notification-service/      #  Notifications multi-canal
 │   ├── src/main/java/
 │   │   └── com/yowyob/notification/
 │   │       ├── controller/           # NotificationController
@@ -206,7 +206,7 @@ yowyob-search-backend/
 └── README.md                         # Ce fichier
 ```
 
-### 🧩 Pourquoi cette structure ?
+###  Pourquoi cette structure ?
 
 1. **Séparation des préoccupations** : Chaque microservice a une responsabilité unique (SRP).
 2. **Réutilisabilité** : `yowyob-common` évite la duplication de code (DTOs, utils, exceptions).
@@ -216,7 +216,7 @@ yowyob-search-backend/
 
 ---
 
-## 🛠 Stack technique
+##  Stack technique
 
 ### Backend Framework
 
@@ -289,20 +289,20 @@ yowyob-search-backend/
 
 ---
 
-## 🎯 Microservices
+##  Microservices
 
-### 1️⃣ API Gateway (`yowyob-api-gateway`)
+### 1️ API Gateway (`yowyob-api-gateway`)
 
 **Rôle** : Point d'entrée unique pour tous les clients (Frontend, Mobile, API externe)
 
 **Responsabilités** :
-- ✅ Routage intelligent vers microservices
-- ✅ Authentification JWT (vérification signature)
-- ✅ Rate limiting global (Redis-based)
-- ✅ Circuit breaker (résilience)
-- ✅ Load balancing
-- ✅ CORS configuration
-- ✅ Logging centralisé des requêtes
+-  Routage intelligent vers microservices
+-  Authentification JWT (vérification signature)
+-  Rate limiting global (Redis-based)
+-  Circuit breaker (résilience)
+-  Load balancing
+-  CORS configuration
+-  Logging centralisé des requêtes
 
 **Port** : `8080`
 
@@ -341,19 +341,19 @@ spring:
 
 ---
 
-### 2️⃣ Search Service (`yowyob-search-service`)
+### 2️ Search Service (`yowyob-search-service`)
 
 **Rôle** : Cœur du moteur de recherche
 
 **Responsabilités** :
-- ✅ Recherche full-text (Elasticsearch DSL)
-- ✅ Ranking hybride (BM25 + Geo + Freshness + Popularity)
-- ✅ Suggestions autocomplete
-- ✅ Spelling correction ("Did you mean")
-- ✅ Trending searches
-- ✅ Cache intelligent (Redis, TTL: 5 min)
-- ✅ Historique de recherche (PostgreSQL)
-- ✅ Publication d'événements Kafka
+-  Recherche full-text (Elasticsearch DSL)
+-  Ranking hybride (BM25 + Geo + Freshness + Popularity)
+-  Suggestions autocomplete
+-  Spelling correction ("Did you mean")
+-  Trending searches
+-  Cache intelligent (Redis, TTL: 5 min)
+-  Historique de recherche (PostgreSQL)
+-  Publication d'événements Kafka
 
 **Port** : `8082`
 
@@ -408,18 +408,18 @@ Score final =
 
 ---
 
-### 3️⃣ Crawler Service (`yowyob-crawler-service`)
+### 3️ Crawler Service (`yowyob-crawler-service`)
 
 **Rôle** : Robot d'indexation web (YowYobBot)
 
 **Responsabilités** :
-- ✅ Crawling respectueux (robots.txt, politeness delay)
-- ✅ Parsing HTML (JSoup) et extraction de contenu
-- ✅ Filtrage qualité (longueur, langue, spam)
-- ✅ Indexation bulk dans Elasticsearch
-- ✅ Gestion de la frontier (queue d'URLs avec priorité)
-- ✅ Scheduleur Quartz pour crawls périodiques
-- ✅ Support sitemap.xml
+-  Crawling respectueux (robots.txt, politeness delay)
+-  Parsing HTML (JSoup) et extraction de contenu
+-  Filtrage qualité (longueur, langue, spam)
+-  Indexation bulk dans Elasticsearch
+-  Gestion de la frontier (queue d'URLs avec priorité)
+-  Scheduleur Quartz pour crawls périodiques
+-  Support sitemap.xml
 
 **Port** : `8085`
 
@@ -478,19 +478,19 @@ GET  /crawler/stats              # Statistiques globales
 
 ---
 
-### 4️⃣ User Service (`yowyob-user-service`)
+### 4️ User Service (`yowyob-user-service`)
 
 **Rôle** : Gestion des utilisateurs et authentification
 
 **Responsabilités** :
-- ✅ Inscription (email + password + BCrypt)
-- ✅ Connexion (JWT access + refresh tokens)
-- ✅ Vérification email (token expirable 24h)
-- ✅ Mot de passe oublié (reset token)
-- ✅ Gestion des profils
-- ✅ RBAC (rôles : USER, WEBMASTER, ADMIN)
-- ✅ Refresh token rotation (sécurité)
-- ✅ Blacklist tokens révoqués (Redis)
+-  Inscription (email + password + BCrypt)
+-  Connexion (JWT access + refresh tokens)
+-  Vérification email (token expirable 24h)
+-  Mot de passe oublié (reset token)
+-  Gestion des profils
+-  RBAC (rôles : USER, WEBMASTER, ADMIN)
+-  Refresh token rotation (sécurité)
+-  Blacklist tokens révoqués (Redis)
 
 **Port** : `8083`
 
@@ -511,20 +511,20 @@ DELETE /users/me                 # Supprimer compte
 
 **Flux JWT** :
 ```
-┌─────────┐     Login (email/password)      ┌──────────────┐
+┌─────────┐     Login (email/password)       ┌──────────────┐
 │ Client  │─────────────────────────────────▶│ User Service │
-└─────────┘                                   └──────┬───────┘
-     │                                                │
-     │           BCrypt.verify()                     │
-     │                  ✓                             │
-     │                                                ▼
+└─────────┘                                  └──────┬───────┘
+     │                                              │
+     │           BCrypt.verify()                    │
+     │                  ✓                           │
+     │                                              ▼
      │                                  ┌──────────────────────┐
      │                                  │  Generate JWT Tokens │
      │                                  │  - Access: 15 min    │
      │                                  │  - Refresh: 7 days   │
      │                                  └──────────┬───────────┘
      │                                             │
-     │   { accessToken, refreshToken }            │
+     │   { accessToken, refreshToken }             │
      │◀────────────────────────────────────────────┘
      │
      │  Store in localStorage
@@ -549,18 +549,18 @@ DELETE /users/me                 # Supprimer compte
 
 ---
 
-### 5️⃣ Geo Service (`yowyob-geo-service`)
+### 5️ Geo Service (`yowyob-geo-service`)
 
 **Rôle** : Géolocalisation et recherches spatiales
 
 **Responsabilités** :
-- ✅ Géocodage (adresse → coordonnées)
-- ✅ Géocodage inverse (coordonnées → adresse)
-- ✅ Recherches spatiales (proximité, dans un rayon)
-- ✅ Calcul de distances
-- ✅ Intégration OpenStreetMap Nominatim
-- ✅ Cache Redis (géocodage = 24h TTL)
-- ✅ PostGIS pour requêtes spatiales complexes
+-  Géocodage (adresse → coordonnées)
+-  Géocodage inverse (coordonnées → adresse)
+-  Recherches spatiales (proximité, dans un rayon)
+-  Calcul de distances
+-  Intégration OpenStreetMap Nominatim
+-  Cache Redis (géocodage = 24h TTL)
+-  PostGIS pour requêtes spatiales complexes
 
 **Port** : `8084`
 
@@ -599,17 +599,17 @@ Response:
 
 ---
 
-### 6️⃣ Notification Service (`yowyob-notification-service`)
+### 6️ Notification Service (`yowyob-notification-service`)
 
 **Rôle** : Envoi de notifications multi-canal
 
 **Responsabilités** :
-- ✅ Email (SMTP : vérification, reset password, alertes)
-- ✅ Web Push (VAPID pour PWA)
-- ✅ Mobile Push (Firebase Cloud Messaging)
-- ✅ Consommation événements Kafka (event-driven)
-- ✅ Gestion des subscriptions push
-- ✅ Templates d'emails (Thymeleaf)
+-  Email (SMTP : vérification, reset password, alertes)
+-  Web Push (VAPID pour PWA)
+-  Mobile Push (Firebase Cloud Messaging)
+-  Consommation événements Kafka (event-driven)
+-  Gestion des subscriptions push
+-  Templates d'emails (Thymeleaf)
 
 **Port** : `8086`
 
@@ -644,10 +644,10 @@ public void handleUserEvent(UserEvent event) {
 ```
 ┌─────────┐   Subscribe    ┌──────────────────┐
 │   PWA   │───────────────▶│ Notification Svc │
-└─────────┘                 └────────┬─────────┘
-     │                               │
-     │  Push Subscription            │ Store in DB
-     │  {endpoint, keys}             ▼
+└─────────┘                └────────┬─────────┘
+     │                              │
+     │  Push Subscription           │ Store in DB
+     │  {endpoint, keys}            ▼
      │                      ┌──────────────────┐
      │                      │   PostgreSQL     │
      │                      └──────────────────┘
@@ -662,7 +662,7 @@ public void handleUserEvent(UserEvent event) {
 ┌──────────────────┐
 │ Notification Svc │──────▶ Push Service (FCM/Mozilla)
 └──────────────────┘              │
-                                   ▼
+                                  ▼
                             ┌─────────────┐
                             │   Browser   │
                             │  (shows 🔔) │
@@ -676,7 +676,7 @@ public void handleUserEvent(UserEvent event) {
 
 ---
 
-## ⚙️ Prérequis
+##  Prérequis
 
 ### Développement local
 
@@ -713,11 +713,11 @@ public void handleUserEvent(UserEvent event) {
 
 ---
 
-## 🚀 Installation
+##  Installation
 
 ### 1. Cloner le repository
 ```bash
-git clone https://github.com/votre-org/YowYob-Search-Backend.git
+git clone https://github.com/BrianBrusly/YowYob-Search-Backend.git
 cd YowYob-Search-Backend
 ```
 
@@ -887,7 +887,7 @@ Tous doivent répondre :
 
 ---
 
-## 🧪 Tests
+##  Tests
 
 ### Tests unitaires
 ```bash
@@ -924,7 +924,7 @@ Utilise **JMeter** ou **Gatling** pour simuler charge.
 
 ---
 
-## 📦 Build & Déploiement
+##  Build & Déploiement
 
 ### Build production
 ```bash
@@ -960,7 +960,7 @@ kubectl apply -f k8s/backend/
 
 ---
 
-## 📚 API Documentation
+##  API Documentation
 
 ### Swagger UI (Dev uniquement)
 
@@ -986,7 +986,7 @@ Importer : `/docs/postman/YowYob-Backend.postman_collection.json`
 
 ---
 
-## 📐 Conventions de code
+##  Conventions de code
 
 ### Style Java
 
@@ -1094,7 +1094,7 @@ public class SearchService {
 
 ---
 
-## 📊 Monitoring
+##  Monitoring
 
 ### Actuator Endpoints
 GET /actuator/health         # Santé globale
@@ -1102,6 +1102,7 @@ GET /actuator/info           # Infos application
 GET /actuator/metrics        # Métriques Micrometer
 GET /actuator/prometheus     # Format Prometheus
 GET /actuator/loggers        # Configuration logs
+...  Tempo
 
 ### Métriques Prometheus
 
@@ -1137,9 +1138,9 @@ Visualisation dans **Jaeger** ou **Tempo**.
 
 ---
 
-## 🛣 Roadmap
+##  Roadmap
 
-### ✅ Phase 1 (MVP) - Complété
+###  Phase 1 (MVP) - Complété
 
 - [x] Architecture microservices
 - [x] API Gateway
@@ -1151,7 +1152,7 @@ Visualisation dans **Jaeger** ou **Tempo**.
 - [x] Tests automatisés
 - [x] Docker + Kubernetes
 
-### 🚧 Phase 2 (En cours)
+###  Phase 2 (En cours)
 
 - [ ] Machine Learning pour ranking personnalisé
 - [ ] Vector Search avec embeddings (Spring AI)
@@ -1159,7 +1160,7 @@ Visualisation dans **Jaeger** ou **Tempo**.
 - [ ] Analytics dashboard temps réel
 - [ ] API publique pour webmasters (API keys)
 
-### 🔮 Phase 3 (Futur)
+###  Phase 3 (Futur)
 
 - [ ] Support multi-langues (50+ langues)
 - [ ] Recherche d'images (computer vision)
@@ -1170,9 +1171,9 @@ Visualisation dans **Jaeger** ou **Tempo**.
 
 ---
 
-## 🤝 Extension Commerce
+##  Extension Commerce
 
-### 💼 Adaptation pour e-commerce
+###  Adaptation pour e-commerce
 
 Le backend YowYob peut être étendu pour des cas d'usage e-commerce :
 
@@ -1270,7 +1271,7 @@ public class PaymentController {
 
 ---
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Problème : Services ne démarrent pas
 
@@ -1329,7 +1330,7 @@ kafka-consumer-groups --bootstrap-server localhost:9092 \
 
 ---
 
-## 📞 Support & Contribution
+##  Support & Contribution
 
 ### Questions
 
@@ -1373,7 +1374,7 @@ MIT License - voir [LICENSE](LICENSE)
 
 ---
 
-## 🙏 Remerciements
+##  Remerciements
 
 - **Spring Boot Team** pour l'excellent framework
 - **Elasticsearch** pour le moteur de recherche
