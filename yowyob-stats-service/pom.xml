@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ================================================================ -->
+	<!-- PARENT : Spring Boot Starter Parent                        -->
+	<!-- ================================================================ -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.9-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-stats-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>YowYob Stats Service</name>
+
+	<description>
+		Stats YowYob : Service d’analytics avancé (temps réel + batch), collecte des recherches, clics,
+		redirections marchands, KPIs trafic, taux de conversion, heatmaps, funnels utilisateurs,
+		dashboard webmasters/commerçants, exposition Prometheus, Kafka Streams et analyses agrégées.
+	</description>
+
+	<!-- ================================================================ -->
+	<!-- PROPERTIES                                                 -->
+	<!-- ================================================================ -->
+	<properties>
+		<java.version>21</java.version>
+
+		<!-- Spring Cloud BOM -->
+		<spring-cloud.version>2023.0.3</spring-cloud.version>
+
+		<!-- MapStruct -->
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
+
+		<!-- Résilience -->
+		<resilience4j.version>2.2.0</resilience4j.version>
+	</properties>
+
+	<!-- ================================================================ -->
+	<!-- DEPENDENCIES                                               -->
+	<!-- ================================================================ -->
+	<dependencies>
+
+		<!-- ===================== SPRING BOOT ========================= -->
+
+		<!-- Observabilité interne + healthchecks -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Webflux = réactivité, temps réel + SSE (Server Sent Events) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+		<!-- API REST MVC (admin dashboard) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Stockage métriques agrégées (Historique analytics) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Redis pour métriques temps réel -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<!-- ===================== KAFKA =============================== -->
+
+		<!-- Kafka (stream events provenant de Search, Shop, Gateway) -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- Kafka Streams → fenêtres temporelles, agrégations, top-K -->
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-streams</artifactId>
+		</dependency>
+
+		<!-- ===================== RÉSILIENCE ========================== -->
+
+		<!-- Circuit-breaker, retry, rate limiting pour ingestion extrême -->
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+
+		<!-- ===================== OBSERVABILITÉ ======================= -->
+
+		<!-- Prometheus (exposition métriques) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Export Datadog (option entreprise) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-datadog</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ===================== SPRING CLOUD ======================== -->
+
+		<!-- Config centralisé (tous services YowYob) -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+
+		<!-- Client Feign si besoin de récupérer Search/Shop -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+
+		<!-- Load Balancer → découverte de services interne -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
+		</dependency>
+
+		<!-- ===================== SECURITY ============================ -->
+
+		<!-- JWT Decoding pour authentification dashboard admin -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- ===================== BASE DE DONNÉES ===================== -->
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ===================== MAPPING ============================= -->
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
+
+		<!-- ===================== LOGGING STRUCTURÉ =================== -->
+
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>7.4</version>
+		</dependency>
+
+		<!-- ===================== UTILITAIRES ========================= -->
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>33.0.0-jre</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ===================== TESTS =============================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- WebFlux tests -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Testcontainers : Kafka + PostgreSQL -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>kafka</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<!-- ================================================================ -->
+	<!-- DEPENDENCY MANAGEMENT (BOM)                                -->
+	<!-- ================================================================ -->
+	<dependencyManagement>
+		<dependencies>
+
+			<!-- Spring Cloud BOM -->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<!-- ================================================================ -->
+	<!-- BUILD                                                      -->
+	<!-- ================================================================ -->
+	<build>
+		<plugins>
+
+			<!-- Lombok + MapStruct (annotation processor config) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+
+						<!-- Lombok -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+
+						<!-- MapStruct -->
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
+						</path>
+
+						<!-- Binding Lombok + MapStruct -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
+
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<!-- Build Docker image via Buildpacks -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<image>
+						<runImage>paketobuildpacks/ubuntu-noble-run:latest</runImage>
+					</image>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<!-- ================================================================ -->
+	<!-- REPOSITORIES                                               -->
+	<!-- ================================================================ -->
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases><enabled>false</enabled></releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases><enabled>false</enabled></releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

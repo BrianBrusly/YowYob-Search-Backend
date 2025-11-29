@@ -1,7 +1,7 @@
 #  YowYob Search PWA - Backend
 
 > **Plateforme de recherche intelligente distribuée** - Projet backend monorepo Spring Boot multi-microservices pour la recherche intelligente YowYob, incluant API Gateway, Search, Crawler, User, Geo, Notification.
- Architecture microservices avec Spring Boot 3.x, Java 21, Elasticsearch, Kafka et géolocalisation avancée
+Architecture microservices avec Spring Boot 3.x, Java 21, Elasticsearch, Kafka et géolocalisation avancée
 
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2+-green.svg)](https://spring.io/projects/spring-boot)
@@ -994,13 +994,13 @@ Basé sur **Google Java Style Guide** avec adaptations :
 ```java
 // Classe
 public class SearchService {
-    
+
     // Constants: UPPER_SNAKE_CASE
     private static final int MAX_RESULTS = 100;
-    
+
     // Fields: camelCase
     private final ElasticsearchClient elasticsearchClient;
-    
+
     // Methods: camelCase
     public SearchResponse executeSearch(SearchRequest request) {
         // ...

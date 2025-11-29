@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- ================================================================ -->
+	<!-- PARENT : Spring Boot Starter Parent                        -->
+	<!-- ================================================================ -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.9-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>com.yowyob</groupId>
+	<artifactId>yowyob-shop-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>YowYob Shop Service</name>
+
+	<description>
+		Agrégateur YowYob : Service d’ingestion et de normalisation de catalogues e-commerce (scraping, API marchands, flux XML/JSON).
+		Fournit la comparaison de prix multi-marchands, le suivi de clics produits, et expose les offres normalisées au moteur YowYob Search.
+	</description>
+
+	<!-- ================================================================ -->
+	<!--  PROPERTIES                                                 -->
+	<!-- ================================================================ -->
+	<properties>
+		<java.version>21</java.version>
+
+		<!-- Versions BOM -->
+		<spring-ai.version>1.1.0</spring-ai.version>
+		<spring-cloud.version>2023.0.3</spring-cloud.version>
+
+		<!-- Mapping -->
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
+
+		<!-- Résilience -->
+		<resilience4j.version>2.2.0</resilience4j.version>
+	</properties>
+
+	<!-- ================================================================ -->
+	<!--  DEPENDENCIES                                               -->
+	<!-- ================================================================ -->
+	<dependencies>
+
+		<!-- ===================== SPRING BOOT ========================= -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- API REST MVC -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- PostgreSQL + JPA pour stockage catalogues/produits normalisés -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- Redis pour caching produits + flux marchands -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<!-- Validation DTO/Request -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- ===================== SCRAPING ============================ -->
+
+		<!-- Parsing HTML (Scraping sites marchands non-API) -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.17.2</version>
+		</dependency>
+
+		<!-- Appels HTTP API marchands (Jumia, Amazon, Cdiscount, etc.) -->
+		<dependency>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5</artifactId>
+			<version>5.3.1</version>
+		</dependency>
+
+		<!-- ===================== STREAMING / KAFKA =================== -->
+
+		<!-- Kafka → envoi/consommation des événements (clics, prix, produits) -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- Kafka Streams → comparaison dynamique des prix -->
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-streams</artifactId>
+		</dependency>
+
+		<!-- ===================== ELASTICSEARCH ======================= -->
+
+		<!-- Indexation produits pour le moteur Search principal -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+		</dependency>
+
+		<!-- ===================== SPRING CLOUD ======================== -->
+
+		<!-- Config centralisé (configuration microservices) -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+
+		<!-- Load Balancing interne microservices -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
+		</dependency>
+
+		<!-- Clients Feign pour APIS marchands -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+
+		<!-- ===================== RÉSILIENCE ========================== -->
+
+		<!-- Retry, Circuit Breaker, Rate Limiter pour scraping/API -->
+		<dependency>
+			<groupId>io.github.resilience4j</groupId>
+			<artifactId>resilience4j-spring-boot3</artifactId>
+			<version>${resilience4j.version}</version>
+		</dependency>
+
+		<!-- ===================== DOCUMENTATION ======================= -->
+
+		<!-- Swagger / OpenAPI UI -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+		<!-- ===================== OBSERVABILITÉ ======================= -->
+
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+
+		<!-- ===================== MAPPING ============================ -->
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
+
+		<!-- ===================== LOGGING STRUCTURÉ =================== -->
+
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>7.4</version>
+		</dependency>
+
+		<!-- ===================== UTILITAIRES ========================= -->
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ===================== TESTS =============================== -->
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>kafka</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<!-- ================================================================ -->
+	<!--  DEPENDENCY MANAGEMENT (BOM)                                -->
+	<!-- ================================================================ -->
+	<dependencyManagement>
+		<dependencies>
+
+			<!-- Spring AI BOM -->
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<!-- Spring Cloud BOM -->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<!-- ================================================================ -->
+	<!--  BUILD                                                      -->
+	<!-- ================================================================ -->
+	<build>
+		<plugins>
+
+			<!-- Lombok + MapStruct : compilation annotation processors -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${mapstruct.version}</version>
+						</path>
+
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
+
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
+			<!-- Buildpack Docker → image microservice -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<image>
+						<runImage>paketobuildpacks/ubuntu-noble-run:latest</runImage>
+					</image>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<!-- ================================================================ -->
+	<!-- REPOSITORIES                                               -->
+	<!-- ================================================================ -->
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases><enabled>false</enabled></releases>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases><enabled>false</enabled></releases>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>
