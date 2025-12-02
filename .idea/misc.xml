@@ -1,0 +1,19 @@
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/../Microservices YowYob Search/yowyob-api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-common-service/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-crawler-service/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-geo-service/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-search-service/pom.xml" />
+        <option value="$PROJECT_DIR$/yowyob-user-service/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_23" project-jdk-name="openjdk-23" project-jdk-type="JavaSDK" />
+</project>

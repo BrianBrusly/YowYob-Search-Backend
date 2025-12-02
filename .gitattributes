@@ -1,2 +1,273 @@
-/mvnw text eol=lf
+# ============================================
+# YOWYOB SEARCH BACKEND - GIT ATTRIBUTES
+# ============================================
+# Auteur: YowYob Team 4GI-ENSPY Promo 2027
+# Date: 01-12-2025
+# Description: Configuration des attributs Git pour le backend Spring Boot
+# ============================================
+
+# =======================
+# 1. GESTION DES FINS DE LIGNE (LINE ENDINGS)
+# =======================
+
+# Tous les fichiers textes normalisés en LF (Unix)
+* text=auto eol=lf
+
+# Fichiers spécifiques qui doivent garder CRLF (Windows)
+*.bat text eol=crlf
 *.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Fichiers binaires - Git ne doit pas les modifier
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.avi binary
+*.mp3 binary
+*.flac binary
+*.flv binary
+*.m4v binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.tar binary
+*.rar binary
+*.jar binary
+*.war binary
+*.ear binary
+*.class binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.o binary
+*.a binary
+*.obj binary
+*.lib binary
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+*.odt binary
+*.ods binary
+*.odp binary
+
+# =======================
+# 2. DIFFS ET FUSIONS SPÉCIFIQUES
+# =======================
+
+# Fichiers de propriétés Spring - traitement spécial
+*.properties text diff=javaProperties
+*.yml text diff=yaml
+*.yaml text diff=yaml
+
+# Fichiers XML - traitement spécial
+*.xml text diff=xml
+*.xsd text diff=xml
+*.xsl text diff=xml
+*.wsdl text diff=xml
+
+# Fichiers JSON - traitement spécial
+*.json text diff=json
+
+# Fichiers SQL
+*.sql text diff=sql
+
+# Fichiers de template
+*.ftl text diff=freemarker
+*.vm text diff=velocity
+*.jsp text diff=jsp
+*.html text diff=html
+*.htm text diff=html
+
+# =======================
+# 3. FICHIERS DE CONSTRUCTION ET DÉPENDANCES
+# =======================
+
+# Fichiers Maven - traitement spécifique
+pom.xml text diff=xml
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+
+# Fichiers Gradle (si utilisé)
+*.gradle text diff=groovy
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+gradle-wrapper.jar binary
+
+# Fichiers de dépendances Java - ne pas diff
+*.jar -text -diff
+*.war -text -diff
+*.ear -text -diff
+
+# Fichiers de classes Java - ne pas diff
+*.class -text -diff
+
+# =======================
+# 4. FICHIERS DE CONFIGURATION
+# =======================
+
+# Fichiers de configuration Spring
+application*.yml text diff=yaml
+application*.properties text diff=javaProperties
+bootstrap*.yml text diff=yaml
+bootstrap*.properties text diff=javaProperties
+
+# Fichiers de logs (ignorés mais spécifiés pour clarté)
+*.log -text -diff
+*.log.* -text -diff
+
+# Fichiers de configuration IDE
+.vscode/* linguist-detectable
+.idea/* linguist-detectable
+*.iml linguist-detectable
+
+# =======================
+# 5. FICHIERS SOURCES JAVA
+# =======================
+
+# Fichiers sources Java
+*.java text diff=java
+
+# Fichiers Kotlin (si utilisé)
+*.kt text diff=kotlin
+*.kts text diff=kotlin
+
+# Fichiers de ressources
+*.txt text
+*.md text
+*.adoc text diff=asciidoc
+*.rst text diff=rst
+
+# =======================
+# 6. FICHIERS DE TESTS
+# =======================
+
+# Fichiers de tests
+*Test.java text diff=java
+*Tests.java text diff=java
+*IT.java text diff=java
+*ITCase.java text diff=java
+
+# Fichiers de ressources de test
+src/test/resources/** text
+
+# Fichiers de configuration de test
+*-test.yml text diff=yaml
+*-test.properties text diff=javaProperties
+
+# =======================
+# 7. LINGUIST (DÉTECTION DE LANGAGE GITHUB)
+# =======================
+
+# Force la détection comme projet Java
+# Cela aide GitHub à afficher les bonnes statistiques
+*.java linguist-language=Java
+*.kt linguist-language=Kotlin
+*.groovy linguist-language=Groovy
+*.scala linguist-language=Scala
+
+# Empêche la détection incorrecte
+mvnw linguist-detectable=false
+gradlew linguist-detectable=false
+*.jar linguist-vendored
+*.war linguist-vendored
+*.ear linguist-vendored
+
+# =======================
+# 8. FILTRES ET HOOKS
+# =======================
+
+# Filtre pour nettoyer les whitespaces (optionnel)
+#*.java filter=whitespace
+#*.kt filter=whitespace
+#*.xml filter=whitespace
+#*.yml filter=whitespace
+#*.yaml filter=whitespace
+
+# Filtre pour les clés cryptographiques (sécurité)
+config/keys/*.pem filter=cryptographic
+config/keys/*.key filter=cryptographic
+*.jks filter=cryptographic
+*.keystore filter=cryptographic
+
+# =======================
+# 9. FUSION (MERGE) SPÉCIFIQUE
+# =======================
+
+# Stratégie de fusion pour les fichiers de configuration
+pom.xml merge=union
+*.xml merge=union
+*.yml merge=union
+*.yaml merge=union
+*.properties merge=union
+
+# Éviter les conflits sur les fichiers de lock
+package-lock.json merge=ours
+yarn.lock merge=ours
+pnpm-lock.yaml merge=ours
+
+# =======================
+# 10. EXPORT-IGNORE
+# =======================
+
+# Fichiers à exclure des archives (git archive)
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.editorconfig export-ignore
+/.github/ export-ignore
+/.vscode/ export-ignore
+/.idea/ export-ignore
+*.iml export-ignore
+
+# Fichiers de développement
+mvnw export-ignore
+mvnw.cmd export-ignore
+gradlew export-ignore
+gradlew.bat export-ignore
+docker-compose.override.yml export-ignore
+
+# Fichiers de logs et temporaires
+logs/ export-ignore
+tmp/ export-ignore
+temp/ export-ignore
+
+# Fichiers de build
+target/ export-ignore
+build/ export-ignore
+out/ export-ignore
+bin/ export-ignore
+
+# =======================
+# 11. ATTRIBUTS SPÉCIFIQUES AU PROJET
+# =======================
+
+# Fichiers de documentation
+docs/**/*.md text
+docs/**/*.adoc text diff=asciidoc
+docs/**/*.pdf binary
+
+# Fichiers de scripts
+scripts/*.sh text eol=lf
+scripts/*.bash text eol=lf
+scripts/*.ps1 text eol=crlf
+
+# Fichiers Docker
+Dockerfile text
+docker-compose*.yml text diff=yaml
+*.dockerfile text
+
+# Fichiers Kubernetes
+*.yaml text diff=yaml
+*.yml text diff=yaml
+
+# Fichiers Terraform
+*.tf text diff=hcl
+*.tfvars text diff=hcl

@@ -1,21 +1,80 @@
-# Maven / Java
+# ============================================
+# YOWYOB SEARCH BACKEND - GIT IGNORE
+# ============================================
+
+# Copier le contenu principal ci-dessus et ajouter:
+
+# =======================
+# SPRING BOOT SPÉCIFIQUE
+# =======================
+
+# Application properties sensibles
+**/application-prod.yml
+**/application-prod.properties
+**/bootstrap-prod.yml
+
+# Fichiers de configuration locale
+**/application-local.yml
+**/application-local.properties
+
+# Fichiers de logs Spring Boot
+spring.log
+**/spring.log
+
+# Fichiers de cache Hibernate
+**/hibernate.cache/
+
+# Fichiers uploads
+uploads/
+**/uploads/
+static/uploads/
+
+# =======================
+# MAVEN SPÉCIFIQUE
+# =======================
+
+# Répertoire target Maven
 target/
-*.class
+**/target/
+
+# Fichiers de dépendances locales
+.m2/
+.mvn/
+mvnw
+mvnw.cmd
+.mvn/wrapper/
+
+# =======================
+# TESTS ET RAPPORTS
+# =======================
+
+# Rapports de tests
+**/target/surefire-reports/
+**/target/failsafe-reports/
+**/target/site/
+
+# Couverture de code
+**/target/jacoco/
+**/target/coverage/
+
+# Rapports de qualité
+**/target/checkstyle/
+**/target/pmd/
+**/target/findbugs/
+
+# =======================
+# DOCKER ET DÉPLOIEMENT
+# =======================
+
+# Images Docker locales
 *.jar
-*.war
-*.ear
+!mvnw
+!mvnw.cmd
 
-# IntelliJ
-.idea/
-*.iml
-out/
+# Fichiers de déploiement
+deploy/
+**/deploy/
 
-# Logs
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Clés sensibles
-firebase-service-account.json
+# Fichiers de build
+docker-build/
+**/docker-build/
