@@ -2,24 +2,12 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile name="Annotation profile for YowYob Search Backend" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-        </processorPath>
-        <module name="yowyob-user-service" />
-        <module name="yowyob-api-gateway" />
-        <module name="yowyob-geo-service" />
-        <module name="yowyob-notification-service" />
-        <module name="yowyob-search-service" />
-        <module name="yowyob-crawler-service" />
-      </profile>
       <profile name="Annotation profile for yowyob-common-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <option name="mapstruct.defaultComponentModel" value="spring" />
+        <option name="mapstruct.unmappedTargetPolicy" value="IGNORE" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.5.Final/mapstruct-processor-1.5.5.Final.jar" />
@@ -52,20 +40,36 @@
         </processorPath>
         <module name="yowyob-stats-service" />
       </profile>
+      <profile name="Annotation profile for YowYob Search Backend" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="mapstruct.defaultComponentModel" value="spring" />
+        <option name="mapstruct.unmappedTargetPolicy" value="IGNORE" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+        </processorPath>
+        <module name="yowyob-user-service" />
+        <module name="yowyob-api-gateway" />
+        <module name="yowyob-geo-service" />
+        <module name="yowyob-notification-service" />
+        <module name="yowyob-search-service" />
+        <module name="yowyob-crawler-service" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="yowyob-api-gateway" options="-parameters" />
-      <module name="yowyob-common-service" options="-parameters" />
-      <module name="yowyob-crawler-service" options="-parameters" />
-      <module name="yowyob-geo-service" options="-parameters" />
-      <module name="yowyob-notification-service" options="-parameters" />
-      <module name="yowyob-search-backend" options="" />
-      <module name="yowyob-search-service" options="-parameters" />
+      <module name="yowyob-api-gateway" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-common-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-crawler-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-geo-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-notification-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-search-backend" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
+      <module name="yowyob-search-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
       <module name="yowyob-shop-service" options="-parameters" />
       <module name="yowyob-stats-service" options="-parameters" />
-      <module name="yowyob-user-service" options="-parameters" />
+      <module name="yowyob-user-service" options="-parameters -Amapstruct.defaultComponentModel=spring -Amapstruct.unmappedTargetPolicy=IGNORE" />
     </option>
   </component>
 </project>

@@ -1,0 +1,381 @@
+# ============================================
+# YOWYOB API GATEWAY - CONFIGURATION PRINCIPALE
+# ============================================
+# Auteur: YowYob Team 4GI-ENSPY Promo 2027
+# Version: 1.0.0
+# ============================================
+# IMPORTANT: Les valeurs sensibles doivent être définies dans le fichier .env
+# ============================================
+
+server:
+  port: ${API_GATEWAY_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  http2:
+    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+spring:
+  application:
+    name: yowyob-api-gateway
+
+  # Configuration des profils
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # Chargement des variables d'environnement depuis le fichier .env
+  config:
+    import: optional:file:.env[.properties]
+
+  # Configuration Cloud Gateway
+  cloud:
+    gateway:
+      # Configuration globale
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+            allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,PATCH}
+            allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+            allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+            max-age: ${CORS_MAX_AGE:3600}
+            exposed-headers:
+              - X-Request-ID
+              - X-Correlation-ID
+              - X-RateLimit-Limit
+              - X-RateLimit-Remaining
+              - X-RateLimit-Reset
+
+      # Découverte de services avec Eureka
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # Configuration des routes
+      routes:
+        # ============================================
+        # SEARCH SERVICE ROUTES
+        # ============================================
+        - id: search-service
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 60
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+            - AddRequestHeader=X-Service, search-service
+            - AddResponseHeader=X-Powered-By, YowYob-Gateway
+
+        # ============================================
+        # USER SERVICE ROUTES (Authentication)
+        # ============================================
+        - id: auth-public
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/login,/api/auth/register,/api/auth/refresh
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, user-service
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 3
+
+        - id: auth-secure
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, user-service
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 10
+
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, user-service
+
+        # ============================================
+        # GEO SERVICE ROUTES
+        # ============================================
+        - id: geo-service
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, geo-service
+            - AddResponseHeader=Access-Control-Allow-Origin, "*"
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 15
+
+        # ============================================
+        # SHOP SERVICE ROUTES
+        # ============================================
+        - id: shop-service-products
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop
+            - AddRequestHeader=X-Service, shop-service
+
+        - id: shop-service-merchants
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop
+            - AddRequestHeader=X-Service, shop-service
+
+        # ============================================
+        # CRAWLER SERVICE ROUTES (Admin only)
+        # ============================================
+        - id: crawler-service
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, crawler-service
+
+        # ============================================
+        # NOTIFICATION SERVICE ROUTES
+        # ============================================
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, notification-service
+
+        # ============================================
+        # STATS SERVICE ROUTES
+        # ============================================
+        - id: stats-service-public
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/public/**
+          filters:
+            - StripPrefix=2
+            - AddRequestHeader=X-Service, stats-service
+
+        - id: stats-service-admin
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/admin/**,/api/analytics/**
+          filters:
+            - StripPrefix=1
+            - AddRequestHeader=X-Service, stats-service
+
+        # ============================================
+        # ACTUATOR ROUTES (Monitoring)
+        # ============================================
+        - id: actuator-health
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/actuator/health,/actuator/info
+          filters:
+            - AddRequestHeader=X-Service, gateway-actuator
+
+        - id: actuator-secure
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/actuator/**
+          filters:
+            - AddRequestHeader=X-Service, gateway-actuator
+
+      # Configuration HTTP Client
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
+        pool:
+          type: elastic
+          max-connections: 500
+          max-idle-time: 20s
+          max-life-time: 5m
+        wiretap: false
+        compression: true
+
+      # Configuration WebSocket
+      websocket:
+        enabled: true
+
+  # Configuration Redis (pour rate limiting et cache)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}  # Doit être défini dans .env
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2000}
+      lettuce:
+        pool:
+          max-active: ${REDIS_MAX_TOTAL:8}
+          max-idle: ${REDIS_MAX_IDLE:8}
+          min-idle: ${REDIS_MIN_IDLE:0}
+          max-wait: 2000ms
+        shutdown-timeout: 200ms
+
+  # Configuration Eureka Client
+  cloud:
+    discovery:
+      enabled: true
+
+# Configuration Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+    instance-id: ${spring.application.name}:${random.value}
+
+# Configuration Resilience4j (Circuit Breaker)
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50.0
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+    instances:
+      searchCircuitBreaker:
+        base-config: default
+        sliding-window-size: 10
+        failure-rate-threshold: 50.0
+        wait-duration-in-open-state: 5s
+        slow-call-rate-threshold: 80.0
+        slow-call-duration-threshold: 2s
+      shopCircuitBreaker:
+        base-config: default
+        sliding-window-size: 20
+        failure-rate-threshold: 60.0
+        wait-duration-in-open-state: 10s
+        slow-call-duration-threshold: 3s
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10s
+        cancel-running-future: true
+    instances:
+      searchCircuitBreaker:
+        timeout-duration: 5s
+      shopCircuitBreaker:
+        timeout-duration: 8s
+
+# Configuration JWT (variables d'environnement requises)
+jwt:
+  secret: ${JWT_SECRET}  # Doit être défini dans .env
+  expiration: ${JWT_EXPIRATION_MS:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  issuer: ${JWT_ISSUER:yowyob-search}
+  audience: ${JWT_AUDIENCE:yowyob-clients}
+
+# Configuration Rate Limiting
+rate:
+  limit:
+    requests-per-minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:100}
+    burst-capacity: ${RATE_LIMIT_BURST_CAPACITY:20}
+
+# Configuration Management & Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+    gateway:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: ${PROMETHEUS_ENABLED:true}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+# Configuration Logging
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.yowyob: ${LOG_LEVEL_COM_YOWYOB:DEBUG}
+    org.springframework.web: ${LOG_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
+    io.netty: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/api-gateway.log
+    max-size: 10MB
+    max-history: 30
+
+# Configuration Informations Application (sans données sensibles)
+info:
+  app:
+    name: YowYob API Gateway
+    description: Point d'entrée unique pour tous les microservices YowYob Search
+    version: 1.0.0
+    team: YowYob Team 4GI-ENSPY Promo 2027
+    contact:
+      email: ${CONTACT_EMAIL:contact@yowyob.com}
+      # Note: Ne jamais mettre de numéro de téléphone personnel dans le code

@@ -1,0 +1,82 @@
+# ============================================
+# CONFIGURATION DÉVELOPPEMENT
+# ============================================
+# Pour l'environnement de développement local
+# Les valeurs par défaut sont pour le développement seulement
+# ============================================
+
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      httpclient:
+        wiretap: true  # Activer pour le débogage
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - http://localhost:3000
+              - http://localhost:3001
+              - http://localhost:8080
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+
+  # Redis local (configuration de développement seulement)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}  # Doit être défini dans .env même en dev
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# Eureka local (désactivé par défaut en dev, activer si nécessaire)
+eureka:
+  client:
+    enabled: false  # Désactiver Eureka en développement local
+    # service-url:
+    #   defaultZone: http://localhost:8761/eureka/
+
+# Logging verbeux pour debug (développement seulement)
+logging:
+  level:
+    root: INFO
+    com.yowyob: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG
+    reactor.netty: DEBUG
+    io.netty: DEBUG
+
+# Monitoring détaillé en développement
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Exposer tous les endpoints en dev
+  endpoint:
+    health:
+      show-details: always
+
+# Rate limiting plus permissif en dev (pour faciliter le développement)
+rate:
+  limit:
+    requests-per-minute: 1000
+    burst-capacity: 100
+
+# Configuration JWT pour le développement (utiliser une clé de dev si nécessaire)
+jwt:
+  secret: ${JWT_SECRET:dev-jwt-secret-change-in-production}  # Clé temporaire pour dev
+  expiration: 900000  # 15 minutes
+  refresh-expiration: 604800000  # 7 jours
+
+# Désactiver HTTPS en développement
+server:
+  ssl:
+    enabled: false
