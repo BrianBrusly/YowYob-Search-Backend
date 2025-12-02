@@ -77,4 +77,4 @@ deploy/
 
 # Fichiers de build
 docker-build/
-**/docker-build/
+**/docker-build/.idea/
