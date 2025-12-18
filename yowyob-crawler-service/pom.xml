@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+ =====================================================================
+  YOWYOB SEARCH - CRAWLER SERVICE
+  Module de crawling web, indexing, event streaming
+  Java 21 | Spring Boot 3.4.x
+ =====================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ✅ Référence au parent -->
+	<!-- ============================================================= -->
+	<!-- PARENT ROOT                                                   -->
+	<!-- ============================================================= -->
 	<parent>
 		<groupId>com.yowyob</groupId>
 		<artifactId>yowyob-search-backend</artifactId>
@@ -15,229 +27,179 @@
 	<artifactId>yowyob-crawler-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>YowYob Crawler Service</name>
-	<description>Module d'exploration web dédié, assurant la découverte, le téléchargement respectueux (robots.txt, délai de politesse) et l'indexation des contenus web, avec filtrage de qualité pour alimenter l'index de recherche de manière continue et fiable.</description>
+	<description>
+		Service d'exploration web et indexation continue,
+		respectant robots.txt, politesse HTTP, et publication d'événements.
+	</description>
 
+	<!-- ============================================================= -->
+	<!-- PROPRIÉTÉS                                                  -->
+	<!-- ============================================================= -->
 	<properties>
 		<java.version>21</java.version>
 		<jsoup.version>1.17.2</jsoup.version>
+		<commons-io.version>2.15.1</commons-io.version>
+		<guava.version>33.0.0-jre</guava.version>
+		<testcontainers.version>1.19.3</testcontainers.version>
+		<mockwebserver.version>4.11.0</mockwebserver.version>
 	</properties>
 
+	<!-- ============================================================= -->
+	<!-- DÉPENDANCES                                                   -->
+	<!-- ============================================================= -->
 	<dependencies>
 
-		<!-- ✅ Common service OBLIGATOIRE -->
+		<!-- ================= COMMON SERVICE ================= -->
 		<dependency>
 			<groupId>com.yowyob</groupId>
 			<artifactId>yowyob-common-service</artifactId>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- SPRING BOOT CORE                           -->
-		<!-- ========================================== -->
-
-		<!-- Actuator : Monitoring crawler (pages/h, erreurs, domaines actifs) -->
+		<!-- ================= SPRING BOOT ================= -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
-		<!-- Elasticsearch : Indexation documents crawlés -->
-		<!-- Bulk insert optimisé pour performance -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-		</dependency>
-
-		<!-- JPA : Gestion file URLs, jobs crawl, statistiques domaines -->
-		<!-- Tables: url_queue, crawled_pages, crawl_jobs, domain_stats -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-
-		<!-- Redis : Cache robots.txt (TTL 24h), rate limiting par domaine -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
-
-		<!-- Quartz : Scheduling jobs crawl périodiques -->
-		<!-- Job quotidien: recrawl pages importantes (3h matin) -->
-		<!-- Job hebdomadaire: recrawl pages standards (dimanche 2h) -->
-		<!-- Job mensuel: nettoyage URLs mortes (1er du mois) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-quartz</artifactId>
 		</dependency>
-
-		<!-- Validation : Validation URLs soumises, configs crawl -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
-
-		<!-- WebFlux : HTTP Client réactif pour crawling parallèle -->
-		<!-- WebClient non-bloquant: 100 downloads simultanés sans bloquer threads -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- WEB CRAWLING - PARSING HTML                -->
-		<!-- ========================================== -->
-
-		<!-- Jsoup : Parsing HTML, extraction contenu -->
-		<!-- Extraction: title, meta description, h1-h6, texte, liens, images -->
-		<!-- Nettoyage: suppression scripts, styles, commentaires -->
+		<!-- ================= WEB CRAWLING ================= -->
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
 			<version>${jsoup.version}</version>
 		</dependency>
-
-		<!-- Tika : Détection type MIME, extraction metadata -->
-		<!-- Support: PDF, DOCX, images, etc. (optionnel futur) -->
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>2.9.1</version>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- APACHE KAFKA - EVENT STREAMING             -->
-		<!-- ========================================== -->
-
-		<!-- Kafka : Publication événements crawler.document-indexed -->
-		<!-- Consommé par: Search Service (refresh cache) -->
-		<!--               Notification Service (alertes admin) -->
+		<!-- ================= KAFKA ================= -->
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- MIGRATION BASE DE DONNÉES                  -->
-		<!-- ========================================== -->
-
-		<!-- Flyway : Versioning tables crawler -->
+		<!-- ================= FLYWAY ================= -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- UTILITAIRES                                -->
-		<!-- ========================================== -->
-
-		<!-- Commons Lang : Utilitaires String, normalisation URLs -->
+		<!-- ================= UTILITAIRES ================= -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-
-		<!-- Commons IO : Utilitaires fichiers, streams -->
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.15.1</version>
+			<version>${commons-io.version}</version>
 		</dependency>
-
-		<!-- Guava : BloomFilter pour déduplication URLs, cache -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>33.0.0-jre</version>
+			<version>${guava.version}</version>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- RUNTIME & DEVELOPPEMENT                    -->
-		<!-- ========================================== -->
-
+		<!-- ================= RUNTIME & DEV ================= -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-
-		<!-- Prometheus : Métriques crawler -->
-		<!-- Tracking: pages crawlées/h, taux erreurs, politesse delays -->
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- TESTS                                      -->
-		<!-- ========================================== -->
-
+		<!-- ================= TEST ================= -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- Kafka Test : Tests publication événements -->
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- TestContainers : Tests avec Elasticsearch, PostgreSQL réels -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>elasticsearch</artifactId>
-			<version>1.19.3</version>
+			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>1.19.3</version>
+			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- MockWebServer : Mock HTTP server pour tests crawling -->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
+			<version>${mockwebserver.version}</version>
 			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
 
+	<!-- ============================================================= -->
+	<!-- BUILD                                                        -->
+	<!-- ============================================================= -->
 	<build>
 		<plugins>
+			<!-- Compilation Java 21 + Lombok -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<release>${java.version}</release>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -247,6 +209,7 @@
 				</configuration>
 			</plugin>
 
+			<!-- Spring Boot Maven Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -261,27 +224,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>

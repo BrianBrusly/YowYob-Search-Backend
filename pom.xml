@@ -1,42 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+ =====================================================================
+  YOWYOB SEARCH BACKEND - PARENT POM
+  - Java 21
+  - Spring Boot 3.4.0 (stable)
+  - Architecture microservices
+  - Outils complets (Postgres, Redis, Kafka, Elasticsearch, Spring AI, etc.)
+ =====================================================================
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="
+           http://maven.apache.org/POM/4.0.0
+           https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- Spring Boot Parent -->
+	<!-- ================= PARENT SPRING BOOT ================= -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.8-SNAPSHOT</version>
+		<version>3.4.0</version>
 		<relativePath/>
 	</parent>
 
+	<!-- ================= IDENTITÉ DU PROJET ================= -->
 	<groupId>com.yowyob</groupId>
 	<artifactId>yowyob-search-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>YowYob Search Backend</name>
-	<description>Backend microservices pour moteur de recherche YowYob Search PWA</description>
+	<description>Backend microservices du moteur de recherche YowYob Search</description>
 
-	<!-- Auteur: YowYob Team 4GI-ENSPY Promo 2027 -->
-	<organization>
-		<name>YowYob Team</name>
-		<url>https://github.com/BrianBrusly</url>
-	</organization>
-
-	<developers>
-		<developer>
-			<name>YowYob Team 4GI-ENSPY Promo 2027</name>
-			<email>heudepbrianbrusly@gmail.com</email>
-			<organization>ENSPY</organization>
-		</developer>
-	</developers>
-
-	<!-- Modules du backend -->
+	<!-- ================= MODULES ================= -->
 	<modules>
 		<module>yowyob-common-service</module>
 		<module>yowyob-api-gateway</module>
@@ -49,32 +46,58 @@
 		<module>yowyob-stats-service</module>
 	</modules>
 
-	<!-- Propriétés -->
+	<!-- ================= PROPRIÉTÉS GLOBALES ================= -->
 	<properties>
 		<java.version>21</java.version>
+		<maven.compiler.release>21</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<!-- Versions centralisées -->
-		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<spring-ai.version>1.1.0</spring-ai.version>
-		<jjwt.version>0.12.3</jjwt.version>
-		<jsoup.version>1.17.2</jsoup.version>
+		<!-- Spring Cloud -->
+		<spring-cloud.version>2024.0.0</spring-cloud.version>
+
+		<!-- JWT / MapStruct / Lombok -->
+		<jjwt.version>0.12.5</jjwt.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-		<testcontainers.version>1.19.3</testcontainers.version>
-		<postgresql.version>42.7.3</postgresql.version>
-		<elasticsearch.version>8.15.0</elasticsearch.version>
-		<kafka.version>3.7.0</kafka.version>
-		<redis.version>7.2.4</redis.version>
-		<liquibase.version>4.27.0</liquibase.version>
-		<openapi.version>2.5.0</openapi.version>
+
+		<!-- Parsing HTML -->
+		<jsoup.version>1.17.2</jsoup.version>
+
+		<!-- Observabilité -->
 		<micrometer.version>1.13.4</micrometer.version>
+		<otel.version>1.32.0</otel.version>
+
+		<!-- DB & Migration -->
+		<postgresql.version>42.7.3</postgresql.version>
+		<liquibase.version>4.27.0</liquibase.version>
+
+		<!-- Build & Analyse -->
+		<jib.version>3.4.2</jib.version>
+		<jacoco.version>0.8.12</jacoco.version>
+		<spotless.version>2.43.0</spotless.version>
+
+		<!-- Spring AI & Testcontainers -->
+		<spring-ai.version>1.1.0</spring-ai.version>
+		<testcontainers.version>1.19.3</testcontainers.version>
+
+		<!-- Springdoc OpenAPI -->
+		<springdoc.version>2.3.0</springdoc.version>
+
+		<!-- Commons IO -->
+		<commons-io.version>2.13.0</commons-io.version>
 	</properties>
 
-	<!-- Dependency Management -->
+	<!-- ================= DEPENDENCY MANAGEMENT (BOMs UNIQUEMENT) ================= -->
 	<dependencyManagement>
 		<dependencies>
+
+			<!-- ================= YOWYOB COMMON SERVICE ================= -->
+			<dependency>
+				<groupId>com.yowyob</groupId>
+				<artifactId>yowyob-common-service</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+
 			<!-- Spring Cloud BOM -->
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
@@ -102,14 +125,7 @@
 				<scope>import</scope>
 			</dependency>
 
-			<!-- Module Common -->
-			<dependency>
-				<groupId>com.yowyob</groupId>
-				<artifactId>yowyob-common-service</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-
-			<!-- JWT -->
+			<!-- JWT Dependencies -->
 			<dependency>
 				<groupId>io.jsonwebtoken</groupId>
 				<artifactId>jjwt-api</artifactId>
@@ -126,46 +142,11 @@
 				<version>${jjwt.version}</version>
 			</dependency>
 
-			<!-- Jsoup -->
-			<dependency>
-				<groupId>org.jsoup</groupId>
-				<artifactId>jsoup</artifactId>
-				<version>${jsoup.version}</version>
-			</dependency>
-
-			<!-- MapStruct -->
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-
-			<!-- PostgreSQL -->
+			<!-- PostgreSQL Driver -->
 			<dependency>
 				<groupId>org.postgresql</groupId>
 				<artifactId>postgresql</artifactId>
 				<version>${postgresql.version}</version>
-			</dependency>
-
-			<!-- Elasticsearch -->
-			<dependency>
-				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-elasticsearch</artifactId>
-				<version>${elasticsearch.version}</version>
-			</dependency>
-
-			<!-- Kafka -->
-			<dependency>
-				<groupId>org.springframework.kafka</groupId>
-				<artifactId>spring-kafka</artifactId>
-				<version>${kafka.version}</version>
-			</dependency>
-
-			<!-- Redis -->
-			<dependency>
-				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-redis</artifactId>
-				<version>${redis.version}</version>
 			</dependency>
 
 			<!-- Liquibase -->
@@ -175,83 +156,99 @@
 				<version>${liquibase.version}</version>
 			</dependency>
 
-			<!-- OpenAPI -->
+			<!-- MapStruct -->
 			<dependency>
-				<groupId>org.springdoc</groupId>
-				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-				<version>${openapi.version}</version>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${mapstruct.version}</version>
 			</dependency>
 
-			<!-- Micrometer -->
+			<!-- Commons IO -->
 			<dependency>
-				<groupId>io.micrometer</groupId>
-				<artifactId>micrometer-core</artifactId>
-				<version>${micrometer.version}</version>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>io.micrometer</groupId>
-				<artifactId>micrometer-registry-prometheus</artifactId>
-				<version>${micrometer.version}</version>
-			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
-	<!-- Dépendances communes à tous les modules -->
+	<!-- ================= DÉPENDANCES COMMUNES À TOUS LES MODULES ================= -->
 	<dependencies>
+
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<scope>provided</scope>
 		</dependency>
 
+		<!-- Validation Jakarta -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Cache abstraction -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- Observabilité -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+
+		<!-- SpringDoc OpenAPI UI (REST & WebFlux) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
+
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
+	<!-- ================= BUILD & PLUGINS ================= -->
 	<build>
 		<pluginManagement>
 			<plugins>
-				<!-- Compiler : Java 21 + MapStruct + Lombok -->
+
+				<!-- Compilation Java 21 + Annotation Processors -->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.13.0</version>
 					<configuration>
-						<source>${java.version}</source>
-						<target>${java.version}</target>
+						<release>${maven.compiler.release}</release>
 						<annotationProcessorPaths>
-							<!-- Lombok -->
 							<path>
 								<groupId>org.projectlombok</groupId>
 								<artifactId>lombok</artifactId>
-								<version>${lombok.version}</version>
 							</path>
-							<!-- MapStruct Processor -->
 							<path>
 								<groupId>org.mapstruct</groupId>
 								<artifactId>mapstruct-processor</artifactId>
 								<version>${mapstruct.version}</version>
 							</path>
-							<!-- Lombok-MapStruct Binding -->
-							<path>
-								<groupId>org.projectlombok</groupId>
-								<artifactId>lombok-mapstruct-binding</artifactId>
-								<version>${lombok-mapstruct-binding.version}</version>
-							</path>
 						</annotationProcessorPaths>
-						<compilerArgs>
-							<arg>-Amapstruct.defaultComponentModel=spring</arg>
-							<arg>-Amapstruct.unmappedTargetPolicy=IGNORE</arg>
-						</compilerArgs>
 					</configuration>
 				</plugin>
 
@@ -259,82 +256,31 @@
 				<plugin>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-maven-plugin</artifactId>
-					<configuration>
-						<excludes>
-							<exclude>
-								<groupId>org.projectlombok</groupId>
-								<artifactId>lombok</artifactId>
-							</exclude>
-						</excludes>
-					</configuration>
 				</plugin>
 
-				<!-- Jacoco pour les tests -->
+				<!-- JaCoCo -->
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>0.8.12</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>prepare-agent</goal>
-							</goals>
-						</execution>
-						<execution>
-							<id>report</id>
-							<phase>test</phase>
-							<goals>
-								<goal>report</goal>
-							</goals>
-						</execution>
-					</executions>
+					<version>${jacoco.version}</version>
 				</plugin>
+
+				<!-- Docker Image sans Dockerfile -->
+				<plugin>
+					<groupId>com.google.cloud.tools</groupId>
+					<artifactId>jib-maven-plugin</artifactId>
+					<version>${jib.version}</version>
+				</plugin>
+
+				<!-- Spotless -->
+				<plugin>
+					<groupId>com.diffplug.spotless</groupId>
+					<artifactId>spotless-maven-plugin</artifactId>
+					<version>${spotless.version}</version>
+				</plugin>
+
 			</plugins>
 		</pluginManagement>
-
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
-		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-		<pluginRepository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 </project>

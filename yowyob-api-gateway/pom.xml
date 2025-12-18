@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+ =====================================================================
+  YOWYOB SEARCH - API GATEWAY
+  - Spring Cloud Gateway (WebFlux)
+  - Java 21
+  - Spring Boot 3.4.0
+  - Redis Reactive
+  - Resilience4j
+ =====================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="
+           http://maven.apache.org/POM/4.0.0
+           https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- ✅ Référence au parent -->
+	<!-- ========================================================= -->
+	<!--  PARENT : ROOT PROJECT                                    -->
+	<!-- ========================================================= -->
 	<parent>
 		<groupId>com.yowyob</groupId>
 		<artifactId>yowyob-search-backend</artifactId>
@@ -11,172 +27,105 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>com.yowyob</groupId>
 	<artifactId>yowyob-api-gateway</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>YowYob API Gateway</name>
-	<description>Point d'entrée centralisé pour toutes les requêtes client, responsable du routage intelligent, de la gestion sécurisée des accès via JWT, du load balancing et de la limitation de débit afin d'assurer la fiabilité et la sécurité globale du système.</description>
+	<description>
+		API Gateway réactif pour les microservices YowYob Search
+	</description>
 
-	<properties>
-		<java.version>21</java.version>
-		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<jjwt.version>0.12.3</jjwt.version>
-	</properties>
-
+	<!-- ========================================================= -->
+	<!--  DÉPENDANCES                                              -->
+	<!-- ========================================================= -->
 	<dependencies>
 
-		<!-- ✅ Common service OBLIGATOIRE -->
+		<!-- ================= COMMON SERVICE ================= -->
 		<dependency>
 			<groupId>com.yowyob</groupId>
 			<artifactId>yowyob-common-service</artifactId>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- SPRING BOOT CORE                           -->
-		<!-- ========================================== -->
-
-		<!-- Actuator : Health checks, métriques gateway -->
-		<!-- Endpoints: /actuator/health, /actuator/metrics -->
-		<!-- Utilisé par Kubernetes pour liveness/readiness probes -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-
-		<!-- Redis : Rate limiting et blacklist tokens révoqués -->
-		<!-- Token Bucket algorithm avec Redis pour performance -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
-		</dependency>
-
-		<!-- WebFlux : Serveur réactif Netty non-bloquant -->
-		<!-- Performance: gère 10,000+ connexions simultanées -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-
-		<!-- ========================================== -->
-		<!-- SPRING CLOUD - GATEWAY & RESILIENCE        -->
-		<!-- ========================================== -->
-
-		<!-- Gateway : Routage, filtres, prédicats -->
-		<!-- Routes: /api/search → search-service:8081 -->
-		<!--         /api/crawler → crawler-service:8082 -->
-		<!--         /api/auth → user-service:8083 -->
-		<!--         /api/geo → geo-service:8084 -->
-		<!--         /api/notifications → notification-service:8085 -->
+		<!-- ===================================================== -->
+		<!-- SPRING CLOUD GATEWAY (WebFlux natif)                  -->
+		<!-- ===================================================== -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-gateway</artifactId>
 		</dependency>
 
-		<!-- Resilience4J : Circuit Breaker, Rate Limiter, Retry, Bulkhead -->
-		<!-- Circuit Breaker: Stop appels si service défaillant (50% erreurs sur 10 requêtes) -->
-		<!-- Rate Limiter: 10 req/min anonyme, 100 req/min authentifié -->
-		<!-- Retry: 3 tentatives avec délai exponentiel (100ms, 200ms, 400ms) -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-		</dependency>
-
-		<!-- Load Balancer : Round-robin entre instances services -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
-		</dependency>
-
-		<!-- ========================================== -->
-		<!-- SÉCURITÉ - JWT & OAUTH2                    -->
-		<!-- ========================================== -->
-
-		<!-- Spring Security : Authentification et autorisation -->
-		<!-- Filtres de sécurité sur toutes les routes -->
+		<!-- ===================================================== -->
+		<!-- REDIS REACTIVE (Rate limiting, cache, sessions)      -->
+		<!-- ===================================================== -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
+			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
 		</dependency>
 
-		<!-- OAuth2 Resource Server : Validation JWT -->
-		<!-- Vérifie signature, expiration, claims du token -->
-		<!-- Extrait userId et roles pour injection dans headers backend -->
+		<!-- Cache abstraction -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- Validation Jakarta -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- ===================================================== -->
+		<!-- SÉCURITÉ                                              -->
+		<!-- ===================================================== -->
+
+		<!-- OAuth2 Resource Server (JWT Bearer) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
-		<!-- JJWT API : Interface JWT -->
+		<!-- JWT bas niveau (si besoin custom) -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
-			<version>${jjwt.version}</version>
 		</dependency>
-
-		<!-- JJWT Implementation : Implémentation JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
-			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-
-		<!-- JJWT Jackson : Support JSON pour JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
-			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- OBSERVABILITÉ                              -->
-		<!-- ========================================== -->
+		<!-- ===================================================== -->
+		<!-- RÉSILIENCE / OBSERVABILITÉ                            -->
+		<!-- ===================================================== -->
 
-		<!-- Prometheus : Métriques gateway -->
-		<!-- Tracking: requêtes/sec, latence, erreurs par route -->
+		<!-- Circuit Breaker Resilience4j -->
 		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-			<scope>runtime</scope>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
 		</dependency>
 
-		<!-- Tracing : Distributed tracing avec Zipkin -->
-		<!-- Trace requête à travers tous les services -->
+		<!-- Actuator (health, metrics, prometheus) -->
 		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- ===================================================== -->
+		<!-- OUTILS DEV                                            -->
+		<!-- ===================================================== -->
+
+		<!-- Lombok -->
 		<dependency>
-			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-brave</artifactId>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
 		</dependency>
 
-		<!-- ========================================== -->
-		<!-- DOCUMENTATION API                          -->
-		<!-- ========================================== -->
-
-		<!-- SpringDoc OpenAPI : Swagger UI Gateway -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
-			<version>2.3.0</version>
-		</dependency>
-
-		<!-- ========================================== -->
-		<!-- UTILITAIRES                                -->
-		<!-- ========================================== -->
-
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-		</dependency>
-
-		<!-- ========================================== -->
-		<!-- RUNTIME & DEVELOPPEMENT                    -->
-		<!-- ========================================== -->
-
+		<!-- Devtools -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -184,15 +133,9 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<!-- ========================================== -->
-		<!-- TESTS                                      -->
-		<!-- ========================================== -->
+		<!-- ===================================================== -->
+		<!-- TESTS                                                 -->
+		<!-- ===================================================== -->
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -206,103 +149,21 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- REST Assured : Tests API Gateway -->
-		<dependency>
-			<groupId>io.rest-assured</groupId>
-			<artifactId>rest-assured</artifactId>
-			<scope>test</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
-        </dependency>
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-redis</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-redis</artifactId>
-		</dependency>
-
 	</dependencies>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
+	<!-- ========================================================= -->
+	<!--  BUILD                                                   -->
+	<!-- ========================================================= -->
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
 
+			<!-- Spring Boot -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
 			</plugin>
+
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>
