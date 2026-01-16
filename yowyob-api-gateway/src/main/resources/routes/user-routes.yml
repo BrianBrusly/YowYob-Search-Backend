@@ -1,0 +1,283 @@
+# Configuration des routes pour le User Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Authentification - Login
+        # ============================================================
+        - id: auth_login_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/login
+            - Method=POST
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+            - name: ModifyRequestBody
+              args:
+                inClass: "java.lang.String"
+                outClass: "java.lang.String"
+                rewriteFunction: |
+                  (exchange, body) -> {
+                    // Ajouter l'adresse IP du client pour le logging de sécurité
+                    try {
+                      var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                      var json = objectMapper.readTree(body);
+                      var clientIp = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
+                      var updatedJson = ((com.fasterxml.jackson.databind.node.ObjectNode) json)
+                          .put("clientIp", clientIp)
+                          .put("userAgent", exchange.getRequest().getHeaders().getFirst("User-Agent"));
+                      return Mono.just(objectMapper.writeValueAsString(updatedJson));
+                    } catch (Exception e) {
+                      return Mono.just(body);
+                    }
+                  }
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour l'authentification des utilisateurs"
+            tags: "auth,public,write,sensitive"
+
+        # ============================================================
+        # ROUTE: Authentification - Register
+        # ============================================================
+        - id: auth_register_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/register
+            - Method=POST
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+            - name: ModifyRequestBody
+              args:
+                inClass: "java.lang.String"
+                outClass: "java.lang.String"
+                rewriteFunction: |
+                  (exchange, body) -> {
+                    // Validation du mot de passe avant envoi
+                    try {
+                      var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                      var json = objectMapper.readTree(body);
+                      
+                      if (!json.has("password")) {
+                        throw new com.yowyob.common.exception.BadRequestException("Password is required");
+                      }
+                      
+                      var password = json.get("password").asText();
+                      if (password.length() < 8) {
+                        throw new com.yowyob.common.exception.BadRequestException("Password must be at least 8 characters");
+                      }
+                      
+                      return Mono.just(body);
+                    } catch (Exception e) {
+                      return Mono.error(e);
+                    }
+                  }
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour l'enregistrement de nouveaux utilisateurs"
+            tags: "auth,public,write,sensitive"
+
+        # ============================================================
+        # ROUTE: Authentification - Refresh Token
+        # ============================================================
+        - id: auth_refresh_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/refresh
+            - Method=POST
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour le rafraîchissement des tokens JWT"
+            tags: "auth,authenticated,write"
+
+        # ============================================================
+        # ROUTE: Profil utilisateur - Lecture
+        # ============================================================
+        - id: user_profile_read_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/profile
+            - Method=GET
+            - Header=X-User-Id
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Profile-Source
+                value: user-service
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour la lecture du profil utilisateur"
+            tags: "user,authenticated,read"
+
+        # ============================================================
+        # ROUTE: Profil utilisateur - Mise à jour
+        # ============================================================
+        - id: user_profile_update_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/profile
+            - Method=PUT,PATCH
+            - Header=X-User-Id
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - name: ModifyRequestBody
+              args:
+                inClass: "java.lang.String"
+                outClass: "java.lang.String"
+                rewriteFunction: |
+                  (exchange, body) -> {
+                    // Ajouter la date de mise à jour
+                    try {
+                      var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                      var json = objectMapper.readTree(body);
+                      var updatedJson = ((com.fasterxml.jackson.databind.node.ObjectNode) json)
+                          .put("updatedAt", java.time.Instant.now().toString())
+                          .put("updatedBy", exchange.getRequest().getHeaders().getFirst("X-User-Id"));
+                      return Mono.just(objectMapper.writeValueAsString(updatedJson));
+                    } catch (Exception e) {
+                      return Mono.just(body);
+                    }
+                  }
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour la mise à jour du profil utilisateur"
+            tags: "user,authenticated,write"
+
+        # ============================================================
+        # ROUTE: Gestion des utilisateurs (admin)
+        # ============================================================
+        - id: users_admin_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+            - Method=GET,POST,PUT,DELETE
+            - Header=X-User-Roles,.*ADMIN.*
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@userKeyResolver}"
+            - name: AddRequestHeader
+              args:
+                name: X-Admin-Operation
+                value: "true"
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour la gestion administrative des utilisateurs"
+            tags: "user,admin,write"
+
+        # ============================================================
+        # ROUTE: Vérification d'email
+        # ============================================================
+        - id: user_verify_email_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/verify-email/**
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour la vérification d'adresse email"
+            tags: "user,public,read"
+
+        # ============================================================
+        # ROUTE: Réinitialisation de mot de passe
+        # ============================================================
+        - id: user_password_reset_route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/password-reset/**
+            - Method=POST
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: userCircuitBreaker
+                fallbackUri: forward:/fallback/user
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour la réinitialisation de mot de passe"
+            tags: "user,public,write,sensitive"

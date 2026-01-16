@@ -1,0 +1,410 @@
+# Configuration des routes communes pour tous les services
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+#
+# Routes communes utilisées par tous les services
+# Ces routes définissent des comportements standardisés
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Health check standard
+        # ============================================================
+        - id: common_health_route
+          uri: ${app.services.health:http://localhost:8080}
+          predicates:
+            - Path=/health,/actuator/health
+            - Method=GET
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: commonHealthCircuitBreaker
+                fallbackUri: forward:/fallback/health
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Health-Check, gateway
+            - SetPath=/actuator/health
+          metadata:
+            response-timeout: 5000
+            description: "Route standard pour les health checks"
+            public: true
+
+        # ============================================================
+        # ROUTE: Info de l'application
+        # ============================================================
+        - id: common_info_route
+          uri: ${app.services.info:http://localhost:8080}
+          predicates:
+            - Path=/info,/actuator/info
+            - Method=GET
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Info-Version, ${app.version:1.0.0}
+            - SetPath=/actuator/info
+          metadata:
+            response-timeout: 3000
+            description: "Route pour les informations de l'application"
+            public: true
+
+        # ============================================================
+        # ROUTE: Métriques Prometheus
+        # ============================================================
+        - id: common_metrics_route
+          uri: ${app.services.metrics:http://localhost:8080}
+          predicates:
+            - Path=/metrics,/actuator/metrics,/actuator/prometheus
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, text/plain
+            - AddResponseHeader=X-Metrics-Type, prometheus
+            - RewritePath=/api/metrics, /actuator/prometheus
+          metadata:
+            response-timeout: 10000
+            description: "Route pour les métriques Prometheus"
+
+        # ============================================================
+        # ROUTE: Documentation OpenAPI/Swagger
+        # ============================================================
+        - id: common_docs_route
+          uri: ${app.services.docs:http://localhost:8080}
+          predicates:
+            - Path=/api-docs,/swagger-ui/**,/v3/api-docs/**
+            - Method=GET
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Docs-Version, v3
+            - RewritePath=/api-docs/(?<path>.*), /v3/api-docs/$\{path}
+            - RewritePath=/swagger-ui/(?<path>.*), /swagger-ui/$\{path}
+          metadata:
+            response-timeout: 8000
+            description: "Route pour la documentation OpenAPI"
+            public: true
+
+        # ============================================================
+        # ROUTE: Configuration de l'application
+        # ============================================================
+        - id: common_config_route
+          uri: ${app.services.config:http://localhost:8080}
+          predicates:
+            - Path=/config,/actuator/configprops
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Config-Access, admin-only
+            - SetPath=/actuator/configprops
+          metadata:
+            response-timeout: 5000
+            description: "Route pour la configuration de l'application"
+
+        # ============================================================
+        # ROUTE: Loggers de l'application
+        # ============================================================
+        - id: common_loggers_route
+          uri: ${app.services.loggers:http://localhost:8080}
+          predicates:
+            - Path=/loggers,/actuator/loggers
+            - Method=GET,POST
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Loggers-Management, enabled
+            - SetPath=/actuator/loggers
+          metadata:
+            response-timeout: 5000
+            description: "Route pour la gestion des loggers"
+
+        # ============================================================
+        # ROUTE: Thread dump
+        # ============================================================
+        - id: common_threaddump_route
+          uri: ${app.services.threaddump:http://localhost:8080}
+          predicates:
+            - Path=/threaddump,/actuator/threaddump
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-ThreadDump, enabled
+            - SetPath=/actuator/threaddump
+          metadata:
+            response-timeout: 15000
+            description: "Route pour les thread dumps"
+
+        # ============================================================
+        # ROUTE: Features (feature flags)
+        # ============================================================
+        - id: common_features_route
+          uri: ${app.services.features:http://localhost:8080}
+          predicates:
+            - Path=/features,/actuator/features
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Features-Management, enabled
+            - SetPath=/actuator/features
+          metadata:
+            response-timeout: 5000
+            description: "Route pour les feature flags"
+
+        # ============================================================
+        # ROUTE: Cache management
+        # ============================================================
+        - id: common_cache_route
+          uri: ${app.services.cache:http://localhost:8080}
+          predicates:
+            - Path=/cache,/actuator/caches
+            - Method=GET,DELETE
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Cache-Management, enabled
+            - SetPath=/actuator/caches
+          metadata:
+            response-timeout: 10000
+            description: "Route pour la gestion du cache"
+
+        # ============================================================
+        # ROUTE: Environment variables
+        # ============================================================
+        - id: common_env_route
+          uri: ${app.services.env:http://localhost:8080}
+          predicates:
+            - Path=/env,/actuator/env
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Env-Access, restricted
+            - SetPath=/actuator/env
+          metadata:
+            response-timeout: 5000
+            description: "Route pour les variables d'environnement"
+
+        # ============================================================
+        # ROUTE: Mappings (endpoints)
+        # ============================================================
+        - id: common_mappings_route
+          uri: ${app.services.mappings:http://localhost:8080}
+          predicates:
+            - Path=/mappings,/actuator/mappings
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Mappings, enabled
+            - SetPath=/actuator/mappings
+          metadata:
+            response-timeout: 8000
+            description: "Route pour les mappings des endpoints"
+
+        # ============================================================
+        # ROUTE: Flyway database migration info
+        # ============================================================
+        - id: common_flyway_route
+          uri: ${app.services.flyway:http://localhost:8080}
+          predicates:
+            - Path=/flyway,/actuator/flyway
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Flyway-Info, enabled
+            - SetPath=/actuator/flyway
+          metadata:
+            response-timeout: 10000
+            description: "Route pour les informations de migration Flyway"
+
+        # ============================================================
+        # ROUTE: Liquibase database migration info
+        # ============================================================
+        - id: common_liquibase_route
+          uri: ${app.services.liquibase:http://localhost:8080}
+          predicates:
+            - Path=/liquibase,/actuator/liquibase
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Liquibase-Info, enabled
+            - SetPath=/actuator/liquibase
+          metadata:
+            response-timeout: 10000
+            description: "Route pour les informations de migration Liquibase"
+
+        # ============================================================
+        # ROUTE: Scheduled tasks
+        # ============================================================
+        - id: common_scheduledtasks_route
+          uri: ${app.services.scheduledtasks:http://localhost:8080}
+          predicates:
+            - Path=/scheduledtasks,/actuator/scheduledtasks
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Scheduled-Tasks, enabled
+            - SetPath=/actuator/scheduledtasks
+          metadata:
+            response-timeout: 5000
+            description: "Route pour les tâches planifiées"
+
+        # ============================================================
+        # ROUTE: Gateway routes info
+        # ============================================================
+        - id: common_gateway_route
+          uri: ${app.services.gateway:http://localhost:8080}
+          predicates:
+            - Path=/gateway,/actuator/gateway/routes
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Gateway-Routes, enabled
+            - SetPath=/actuator/gateway/routes
+          metadata:
+            response-timeout: 5000
+            description: "Route pour les informations des routes du Gateway"
+
+        # ============================================================
+        # ROUTE: Service discovery info
+        # ============================================================
+        - id: common_discovery_route
+          uri: ${app.services.discovery:http://localhost:8761}
+          predicates:
+            - Path=/discovery,/eureka/**
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Discovery-Info, enabled
+            - RewritePath=/discovery/(?<path>.*), /eureka/$\{path}
+          metadata:
+            response-timeout: 10000
+            description: "Route pour les informations de service discovery"
+
+        # ============================================================
+        # ROUTE: Configuration server info
+        # ============================================================
+        - id: common_configserver_route
+          uri: ${app.services.configserver:http://localhost:8888}
+          predicates:
+            - Path=/configserver/**
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Config-Server, enabled
+          metadata:
+            response-timeout: 10000
+            description: "Route pour le serveur de configuration"
+
+        # ============================================================
+        # ROUTE: Circuit breaker status
+        # ============================================================
+        - id: common_circuitbreaker_route
+          uri: ${app.services.circuitbreaker:http://localhost:8080}
+          predicates:
+            - Path=/circuitbreaker,/actuator/circuitbreakers
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-CircuitBreaker-Status, enabled
+            - SetPath=/actuator/circuitbreakers
+          metadata:
+            response-timeout: 5000
+            description: "Route pour le statut des circuit breakers"
+
+        # ============================================================
+        # ROUTE: Rate limiter status
+        # ============================================================
+        - id: common_ratelimiter_route
+          uri: ${app.services.ratelimiter:http://localhost:8080}
+          predicates:
+            - Path=/ratelimiter,/actuator/ratelimiters
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-RateLimiter-Status, enabled
+            - SetPath=/actuator/ratelimiters
+          metadata:
+            response-timeout: 5000
+            description: "Route pour le statut des rate limiters"
+
+        # ============================================================
+        # ROUTE: Retry status
+        # ============================================================
+        - id: common_retry_route
+          uri: ${app.services.retry:http://localhost:8080}
+          predicates:
+            - Path=/retry,/actuator/retries
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Retry-Status, enabled
+            - SetPath=/actuator/retries
+          metadata:
+            response-timeout: 5000
+            description: "Route pour le statut des retry policies"
+
+        # ============================================================
+        # ROUTE: Fallback endpoints
+        # ============================================================
+        - id: common_fallback_route
+          uri: ${app.services.fallback:http://localhost:8080}
+          predicates:
+            - Path=/fallback/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - SetResponseHeader=Content-Type, application/json
+            - AddResponseHeader=X-Fallback-Service, enabled
+            - name: Cache
+              args:
+                cache-key-prefix: fallback-responses
+                ttl-seconds: 300
+          metadata:
+            response-timeout: 1000
+            description: "Route pour les endpoints de fallback"
+            public: true

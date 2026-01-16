@@ -1,0 +1,282 @@
+# Configuration des routes pour le Crawler Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+#
+# Routes pour le service de crawling/web scraping
+# Toutes les routes nécessitent le rôle ADMIN
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Gestion des jobs de crawling
+        # ============================================================
+        - id: crawler_jobs_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/jobs
+            - Method=GET,POST
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - name: Retry
+              args:
+                retries: 2
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET
+                backoff:
+                  firstBackoff: 2s
+                  maxBackoff: 10s
+                  factor: 2
+            - AddRequestHeader=X-Service-Type, crawler
+            - AddResponseHeader=X-Response-Time, "{{timestamp}}"
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 5000
+            description: "Routes pour la gestion des jobs de crawling (admin only)"
+
+        # ============================================================
+        # ROUTE: Détails d'un job spécifique
+        # ============================================================
+        - id: crawler_job_details_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/jobs/{id}
+            - Method=GET,PUT,DELETE
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: Retry
+              args:
+                retries: 1
+                statuses: BAD_GATEWAY
+                methods: GET
+            - AddRequestHeader=X-Resource-Type, crawler-job
+          metadata:
+            response-timeout: 15000
+            description: "Routes pour les détails d'un job de crawling spécifique"
+
+        # ============================================================
+        # ROUTE: Contrôle des jobs (start/stop/pause/resume)
+        # ============================================================
+        - id: crawler_job_control_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/jobs/{id}/{action:start|stop|pause|resume|retry}
+            - Method=POST
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
+            - SetPath=/crawler/jobs/{id}/{action}
+          metadata:
+            response-timeout: 20000
+            description: "Routes pour le contrôle des jobs (démarrer/arrêter/pause)"
+
+        # ============================================================
+        # ROUTE: Statistiques du crawler
+        # ============================================================
+        - id: crawler_stats_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/stats
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: Cache
+              args:
+                cache-key-prefix: crawler-stats
+                ttl-seconds: 30
+            - AddResponseHeader=X-Cache-Control, "public, max-age=30"
+          metadata:
+            response-timeout: 10000
+            description: "Routes pour les statistiques du crawler"
+
+        # ============================================================
+        # ROUTE: Configuration du crawler
+        # ============================================================
+        - id: crawler_config_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/config
+            - Method=GET,PUT
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - AddRequestHeader=X-Config-Type, crawler
+          metadata:
+            response-timeout: 15000
+            description: "Routes pour la configuration du crawler"
+
+        # ============================================================
+        # ROUTE: Logs du crawler
+        # ============================================================
+        - id: crawler_logs_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/logs
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: Cache
+              args:
+                cache-key-prefix: crawler-logs
+                ttl-seconds: 10
+            - RewritePath=/api/crawler/logs, /crawler/logs
+          metadata:
+            response-timeout: 30000
+            description: "Routes pour les logs du crawler (streaming possible)"
+
+        # ============================================================
+        # ROUTE: Données extraites
+        # ============================================================
+        - id: crawler_data_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/data
+            - Method=GET,POST,DELETE
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                cache-key-prefix: crawler-data
+                ttl-seconds: 60
+              when: method=='GET'
+          metadata:
+            response-timeout: 60000
+            description: "Routes pour la gestion des données extraites"
+
+        # ============================================================
+        # ROUTE: Health check du crawler (admin seulement)
+        # ============================================================
+        - id: crawler_health_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/health
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - AddResponseHeader=X-Health-Check, crawler-service
+          metadata:
+            response-timeout: 5000
+            description: "Route pour le health check du crawler service"
+
+        # ============================================================
+        # ROUTE: Monitoring en temps réel
+        # ============================================================
+        - id: crawler_monitoring_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/monitoring
+            - Method=GET
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - SetResponseHeader=Content-Type, text/event-stream
+            - SetResponseHeader=Cache-Control, no-cache
+            - SetResponseHeader=Connection, keep-alive
+          metadata:
+            response-timeout: 0  # Pas de timeout pour le streaming
+            description: "Route pour le monitoring en temps réel du crawler"
+
+        # ============================================================
+        # ROUTE: Templates de crawling
+        # ============================================================
+        - id: crawler_templates_route
+          uri: lb://CRAWLER-SERVICE
+          predicates:
+            - Path=/api/crawler/templates
+            - Method=GET,POST,PUT,DELETE
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: crawlerCircuitBreaker
+                fallbackUri: forward:/fallback/crawler
+            - name: Cache
+              args:
+                cache-key-prefix: crawler-templates
+                ttl-seconds: 300
+              when: method=='GET'
+            - AddRequestHeader=X-Template-Type, crawling
+          metadata:
+            response-timeout: 20000
+            description: "Routes pour la gestion des templates de crawling"

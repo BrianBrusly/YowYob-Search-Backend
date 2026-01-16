@@ -1,0 +1,249 @@
+# Configuration des routes pour le Geo Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Géocodage (adresse → coordonnées)
+        # ============================================================
+        - id: geo_geocode_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/geocode
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddRequestHeader
+              args:
+                name: X-Geo-Source
+                value: "nominatim"
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour le géocodage d'adresses"
+            tags: "geo,public,read"
+
+        # ============================================================
+        # ROUTE: Géocodage inverse (coordonnées → adresse)
+        # ============================================================
+        - id: geo_reverse_geocode_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/reverse-geocode
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Cache-TTL
+                value: "86400" # 24 heures
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour le géocodage inverse (coordonnées vers adresse)"
+            tags: "geo,public,read"
+
+        # ============================================================
+        # ROUTE: Recherche de lieux
+        # ============================================================
+        - id: geo_search_places_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/places/search
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: RewritePath
+              args:
+                regexp: "/api/geo/places/search"
+                replacement: "/places/search"
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 5000
+            description: "Route pour la recherche de lieux (POI)"
+            tags: "geo,public,read"
+
+        # ============================================================
+        # ROUTE: Calcul de distance
+        # ============================================================
+        - id: geo_distance_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/distance
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Distance-Units
+                value: "kilometers"
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour le calcul de distance entre deux points"
+            tags: "geo,public,read,fast"
+
+        # ============================================================
+        # ROUTE: Itinéraire
+        # ============================================================
+        - id: geo_route_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/route
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Route-Provider
+                value: "osrm"
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
+            description: "Route pour le calcul d'itinéraire"
+            tags: "geo,public,read,compute-intensive"
+
+        # ============================================================
+        # ROUTE: Boundary lookup
+        # ============================================================
+        - id: geo_boundary_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/boundary/**
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Boundary-Type
+                value: "administrative"
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 5000
+            description: "Route pour la recherche de limites administratives"
+            tags: "geo,public,read"
+
+        # ============================================================
+        # ROUTE: Auto-suggestion de localisation
+        # ============================================================
+        - id: geo_autocomplete_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/autocomplete
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Autocomplete-Limit
+                value: "10"
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour l'auto-suggestion de noms de lieux"
+            tags: "geo,public,read,fast"
+
+        # ============================================================
+        # ROUTE: Timezone lookup
+        # ============================================================
+        - id: geo_timezone_route
+          uri: lb://GEO-SERVICE
+          predicates:
+            - Path=/api/geo/timezone
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: geoCircuitBreaker
+                fallbackUri: forward:/fallback/geo
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@userKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Timezone-Source
+                value: "iana"
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour la recherche de fuseau horaire"
+            tags: "geo,public,read"

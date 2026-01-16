@@ -1,0 +1,242 @@
+# Configuration des routes pour le Notification Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Envoyer une notification
+        # ============================================================
+        - id: notification_send_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/send
+            - Method=POST
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+                statusCodes: 500,502,503,504
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
+            - AddRequestHeader=X-Service-Type, notification
+            - AddResponseHeader=X-Notification-Status, sent
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour envoyer des notifications"
+            rate-limit: "5 req/s"
+            circuit-breaker: notificationCircuitBreaker
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Récupérer les notifications d'un utilisateur
+        # ============================================================
+        - id: notification_list_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - AddRequestHeader=X-Service-Type, notification
+            - RewritePath=/api/notifications(?<segment>/?.*), $\{segment}
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour lister les notifications d'un utilisateur"
+            rate-limit: "10 req/s"
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Marquer une notification comme lue
+        # ============================================================
+        - id: notification_mark_read_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/{id}/read
+            - Method=PUT
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - SetPath=/notifications/{id}/read
+            - AddRequestHeader=X-Service-Type, notification
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour marquer une notification comme lue"
+            rate-limit: "20 req/s"
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Supprimer une notification
+        # ============================================================
+        - id: notification_delete_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/{id}
+            - Method=DELETE
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - SetPath=/notifications/{id}
+            - AddRequestHeader=X-Service-Type, notification
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour supprimer une notification"
+            rate-limit: "10 req/s"
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Statistiques des notifications (Admin)
+        # ============================================================
+        - id: notification_stats_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/stats/**
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - AddRequestHeader=X-Service-Type, notification-admin
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour les statistiques des notifications (admin)"
+            rate-limit: "30 req/s"
+            requires-auth: true
+            required-roles: ADMIN
+
+        # ============================================================
+        # ROUTE: WebSocket pour les notifications en temps réel
+        # ============================================================
+        - id: notification_websocket_route
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/ws
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: notificationCircuitBreaker
+                fallbackUri: forward:/fallback/notification
+            - RewritePath=/api/notifications/ws, /notifications/ws
+            - AddRequestHeader=Upgrade, websocket
+            - AddRequestHeader=Connection, Upgrade
+          metadata:
+            response-timeout: 60000
+            connect-timeout: 10000
+            description: "Route WebSocket pour les notifications en temps réel"
+            requires-auth: true
+            required-roles: USER
+
+# Configuration Resilience4j spécifique au Notification Service
+resilience4j:
+  circuitbreaker:
+    instances:
+      notificationCircuitBreaker:
+        slidingWindowSize: 20
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 40.0
+        waitDurationInOpenState: 15s
+        permittedNumberOfCallsInHalfOpenState: 5
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50.0
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+  retry:
+    instances:
+      notificationRetry:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+
+# Configuration de rate limiting spécifique
+app:
+  rate-limit:
+    notification:
+      send: 5
+      list: 10
+      mark-read: 20
+      delete: 10
+      stats: 30
+      burst-factor: 2.0
+
+# Configuration des fallbacks
+fallback:
+  notification:
+    enabled: true
+    cache-enabled: true
+    cache-ttl: 300
+    default-message: "Le service de notification est temporairement indisponible. Veuillez réessayer plus tard."
+    response:
+      status: 503
+      headers:
+        Retry-After: "60"
+        X-Fallback: "notification-service"
+      body: >
+        {
+          "status": 503,
+          "error": "Service Unavailable",
+          "message": "Le service de notification est temporairement indisponible.",
+          "timestamp": "${timestamp}",
+          "path": "${path}",
+          "suggestion": "Veuillez réessayer dans quelques minutes."
+        }

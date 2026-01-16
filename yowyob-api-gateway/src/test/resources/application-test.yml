@@ -1,0 +1,118 @@
+# Configuration pour les tests
+#
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  main:
+    allow-bean-definition-overriding: true
+
+  # Configuration test Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 15 # Base de données de test séparée
+      timeout: 1s
+      connect-timeout: 1s
+      lettuce:
+        pool:
+          max-active: 5
+          max-idle: 2
+          min-idle: 1
+          max-wait: 500ms
+
+  # Configuration test Cloud
+  cloud:
+    # Désactiver Eureka en test
+    discovery:
+      enabled: false
+    # Configuration test Gateway
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      httpclient:
+        connect-timeout: 1s
+        response-timeout: 2s
+
+  # Désactiver la sécurité pour faciliter les tests
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          enabled: false
+
+  # Configuration test logging
+  logging:
+    level:
+      root: WARN
+      com.yowyob.gateway: DEBUG
+      org.springframework.cloud.gateway: WARN
+      org.springframework.security: WARN
+      reactor.netty: WARN
+
+# Configuration de test de l'application
+app:
+  debug: true
+  cache:
+    enabled: true
+    default-ttl: 60 # TTL court pour les tests
+    search-ttl: 30
+    geo-ttl: 60
+    shop-ttl: 120
+  rate-limit:
+    enabled: true
+    default-limit: 10 # Limite basse pour les tests
+    default-duration: 10 # Durée courte pour les tests
+    search-limit: 5
+    auth-limit: 3
+    admin-limit: 50
+
+# Configuration test Resilience4j
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 5 # Petite fenêtre pour les tests
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 2s # Court pour les tests
+        permitted-number-of-calls-in-half-open-state: 2
+        slow-call-duration-threshold: 1s # Court pour les tests
+        slow-call-rate-threshold: 50
+  retry:
+    configs:
+      default:
+        max-attempts: 2
+        wait-duration: 100ms # Court pour les tests
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 10
+        limit-refresh-period: 10s # Court pour les tests
+        timeout-duration: 0
+        allow-health-indicator-to-fail: true
+
+# Configuration test management
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: false
+
+# Configuration test server
+server:
+  port: 0 # Port aléatoire
+  compression:
+    enabled: false

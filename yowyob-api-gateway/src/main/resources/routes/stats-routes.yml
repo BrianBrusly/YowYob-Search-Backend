@@ -1,0 +1,392 @@
+# Configuration des routes pour le Stats Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Statistiques globales
+        # ============================================================
+        - id: stats_global_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/global
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/global
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 300
+                cache-key-prefix: "stats:global"
+            - AddRequestHeader=X-Service-Type, stats-global
+            - AddResponseHeader=X-Cache-Enabled, true
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour les statistiques globales"
+            rate-limit: "20 req/s"
+            cache-ttl: 300
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Statistiques de recherche
+        # ============================================================
+        - id: stats_search_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/search
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 600
+                cache-key-prefix: "stats:search"
+            - AddRequestHeader=X-Service-Type, stats-search
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour les statistiques de recherche"
+            rate-limit: "30 req/s"
+            cache-ttl: 600
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Statistiques utilisateurs
+        # ============================================================
+        - id: stats_users_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/users
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/users
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 15
+                redis-rate-limiter.burstCapacity: 30
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 900
+                cache-key-prefix: "stats:users"
+            - AddRequestHeader=X-Service-Type, stats-users
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour les statistiques utilisateurs"
+            rate-limit: "15 req/s"
+            cache-ttl: 900
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Statistiques admin - Revenus
+        # ============================================================
+        - id: stats_admin_revenue_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/admin/revenue
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/admin
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 1800
+                cache-key-prefix: "stats:admin:revenue"
+            - AddRequestHeader=X-Service-Type, stats-admin
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 8000
+            description: "Route pour les statistiques de revenus (admin)"
+            rate-limit: "10 req/s"
+            cache-ttl: 1800
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: ADMIN
+
+        # ============================================================
+        # ROUTE: Statistiques admin - Performance
+        # ============================================================
+        - id: stats_admin_performance_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/admin/performance
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/admin
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 15
+                redis-rate-limiter.burstCapacity: 30
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 300
+                cache-key-prefix: "stats:admin:performance"
+            - AddRequestHeader=X-Service-Type, stats-admin
+            - name: RolePredicate
+              args:
+                roles: ADMIN
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour les statistiques de performance (admin)"
+            rate-limit: "15 req/s"
+            cache-ttl: 300
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: ADMIN
+
+        # ============================================================
+        # ROUTE: Statistiques en temps réel
+        # ============================================================
+        - id: stats_realtime_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/realtime
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/realtime
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
+            - RewritePath=/api/stats/realtime, /stats/realtime
+            - AddRequestHeader=X-Service-Type, stats-realtime
+            - AddResponseHeader=Content-Type, text/event-stream
+            - AddResponseHeader=Cache-Control, no-cache
+            - AddResponseHeader=Connection, keep-alive
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
+            description: "Route pour les statistiques en temps réel"
+            rate-limit: "5 req/s"
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Rapports personnalisés
+        # ============================================================
+        - id: stats_reports_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/reports/**
+            - Method=GET,POST
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/reports
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
+            - RewritePath=/api/stats/reports(?<segment>/?.*), $\{segment}
+            - AddRequestHeader=X-Service-Type, stats-reports
+            - name: RolePredicate
+              args:
+                roles: ADMIN,ANALYST
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
+            description: "Route pour les rapports personnalisés"
+            rate-limit: "5 req/s"
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: ADMIN,ANALYST
+
+        # ============================================================
+        # ROUTE: Export de données
+        # ============================================================
+        - id: stats_export_route
+          uri: lb://STATS-SERVICE
+          predicates:
+            - Path=/api/stats/export
+            - Method=GET,POST
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: statsCircuitBreaker
+                fallbackUri: forward:/fallback/stats/export
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 5
+                key-resolver: "#{@userKeyResolver}"
+            - AddRequestHeader=X-Service-Type, stats-export
+            - AddResponseHeader=Content-Disposition, attachment
+            - name: RolePredicate
+              args:
+                roles: ADMIN,ANALYST
+          metadata:
+            response-timeout: 60000
+            connect-timeout: 15000
+            description: "Route pour l'export de données"
+            rate-limit: "2 req/s"
+            circuit-breaker: statsCircuitBreaker
+            requires-auth: true
+            required-roles: ADMIN,ANALYST
+
+# Configuration Resilience4j spécifique au Stats Service
+resilience4j:
+  circuitbreaker:
+    instances:
+      statsCircuitBreaker:
+        slidingWindowSize: 25
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 30.0
+        waitDurationInOpenState: 20s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 10s
+        slowCallRateThreshold: 30.0
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+  retry:
+    instances:
+      statsRetry:
+        maxAttempts: 2
+        waitDuration: 3s
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+
+# Configuration de cache spécifique
+app:
+  cache:
+    stats:
+      global: 300      # 5 minutes
+      search: 600      # 10 minutes
+      users: 900       # 15 minutes
+      admin-revenue: 1800  # 30 minutes
+      admin-performance: 300 # 5 minutes
+      reports: 3600    # 1 heure
+  rate-limit:
+    stats:
+      global: 20
+      search: 30
+      users: 15
+      admin-revenue: 10
+      admin-performance: 15
+      realtime: 5
+      reports: 5
+      export: 2
+      burst-factor: 2.0
+
+# Configuration des fallbacks
+fallback:
+  stats:
+    enabled: true
+    cache-enabled: true
+    default-message: "Le service de statistiques est temporairement indisponible."
+    responses:
+      global:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Les statistiques globales sont temporairement indisponibles.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Veuillez réessayer dans quelques minutes."
+          }
+      admin:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Les statistiques d'administration sont temporairement indisponibles.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Veuillez réessayer dans quelques minutes ou consulter les logs système."
+          }
+      realtime:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Les statistiques en temps réel sont temporairement indisponibles.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Veuillez réessayer de vous connecter dans quelques minutes."
+          }
+      export:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Le service d'export de données est temporairement indisponible.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Veuillez réessayer plus tard ou contacter l'administrateur."
+          }

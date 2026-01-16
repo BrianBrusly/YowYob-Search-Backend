@@ -1,0 +1,217 @@
+# Configuration des routes pour le Search Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Recherche de documents
+        # ============================================================
+        - id: search_documents_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/documents/**
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 60
+                redis-rate-limiter.burstCapacity: 100
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
+                methods: GET
+                series: SERVER_ERROR
+                exceptions: java.io.IOException,java.util.concurrent.TimeoutException
+                backoff:
+                  firstBackoff: 1000ms
+                  maxBackoff: 5000ms
+                  factor: 2
+                  basedOnPreviousValue: false
+            - name: AddRequestHeader
+              args:
+                name: X-Source
+                value: gateway
+            - CacheFilter
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour la recherche de documents dans Elasticsearch"
+            tags: "search,public,read"
+
+        # ============================================================
+        # ROUTE: Recherche avancée
+        # ============================================================
+        - id: search_advanced_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/advanced
+            - Method=POST
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 50
+                key-resolver: "#{@userKeyResolver}"
+            - name: AddRequestHeader
+              args:
+                name: X-Request-Type
+                value: advanced-search
+            - name: ModifyRequestBody
+              args:
+                inClass: "java.lang.String"
+                outClass: "java.lang.String"
+                rewriteFunction: |
+                  (exchange, body) -> {
+                    try {
+                      var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+                      // Validation et transformation du corps si nécessaire
+                      if (!json.has("query")) {
+                        throw new com.yowyob.common.exception.BadRequestException("Query field is required");
+                      }
+                      return Mono.just(body);
+                    } catch (Exception e) {
+                      return Mono.error(e);
+                    }
+                  }
+          metadata:
+            response-timeout: 15000
+            connect-timeout: 5000
+            description: "Route pour la recherche avancée avec filtres complexes"
+            tags: "search,public,write"
+
+        # ============================================================
+        # ROUTE: Suggestions de recherche
+        # ============================================================
+        - id: search_suggestions_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/suggestions
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - CacheFilter
+            - name: AddResponseHeader
+              args:
+                name: X-Cache-TTL
+                value: "60"
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour les suggestions de recherche (autocomplete)"
+            tags: "search,public,read,fast"
+
+        # ============================================================
+        # ROUTE: Statistiques de recherche
+        # ============================================================
+        - id: search_stats_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/stats/**
+            - Method=GET
+            - Header=X-User-Roles,.*ADMIN.*
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+          metadata:
+            response-timeout: 20000
+            connect-timeout: 5000
+            description: "Route pour les statistiques de recherche (admin seulement)"
+            tags: "search,admin,read"
+
+        # ============================================================
+        # ROUTE: Indexation de documents (admin)
+        # ============================================================
+        - id: search_index_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/index/**
+            - Method=POST,PUT,DELETE
+            - Header=X-User-Roles,.*ADMIN.*
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: searchCircuitBreaker
+                fallbackUri: forward:/fallback/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
+            - name: ModifyRequestBody
+              args:
+                inClass: "java.lang.String"
+                outClass: "java.lang.String"
+                rewriteFunction: |
+                  (exchange, body) -> {
+                    // Ajouter le timestamp d'indexation
+                    try {
+                      var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                      var json = objectMapper.readTree(body);
+                      var updatedJson = ((com.fasterxml.jackson.databind.node.ObjectNode) json)
+                          .put("indexedAt", java.time.Instant.now().toString())
+                          .put("indexedBy", exchange.getRequest().getHeaders().getFirst("X-User-Id"));
+                      return Mono.just(objectMapper.writeValueAsString(updatedJson));
+                    } catch (Exception e) {
+                      return Mono.just(body);
+                    }
+                  }
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 10000
+            description: "Route pour l'indexation de documents (admin seulement)"
+            tags: "search,admin,write,batch"
+
+        # ============================================================
+        # ROUTE: Health check du Search Service
+        # ============================================================
+        - id: search_health_route
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/api/search/health
+            - Method=GET
+          filters:
+            - StripPrefix=2
+            - name: SetPath
+              args:
+                _genkey_0: /actuator/health
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour le health check du Search Service"
+            tags: "search,monitoring,health"

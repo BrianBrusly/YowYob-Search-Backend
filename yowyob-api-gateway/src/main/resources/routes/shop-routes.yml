@@ -1,0 +1,333 @@
+# Configuration des routes pour le Shop Service
+# 
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # ============================================================
+        # ROUTE: Recherche de produits
+        # ============================================================
+        - id: shop_search_products_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/products/search
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/search
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 300
+                cache-key-prefix: "shop:search"
+            - AddRequestHeader=X-Service-Type, shop-search
+            - AddResponseHeader=X-Cache-Enabled, true
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour la recherche de produits"
+            rate-limit: "30 req/s"
+            cache-ttl: 300
+            circuit-breaker: shopCircuitBreaker
+            requires-auth: false
+
+        # ============================================================
+        # ROUTE: Détails d'un produit
+        # ============================================================
+        - id: shop_product_details_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/products/{id}
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/product
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 1800
+                cache-key-prefix: "shop:product"
+            - SetPath=/shop/products/{id}
+            - AddRequestHeader=X-Service-Type, shop-product
+            - AddResponseHeader=X-Cache-Enabled, true
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour les détails d'un produit"
+            rate-limit: "50 req/s"
+            cache-ttl: 1800
+            circuit-breaker: shopCircuitBreaker
+            requires-auth: false
+
+        # ============================================================
+        # ROUTE: Comparaison de prix
+        # ============================================================
+        - id: shop_price_comparison_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/products/{id}/prices
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/prices
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 600
+                cache-key-prefix: "shop:prices"
+            - SetPath=/shop/products/{id}/prices
+            - AddRequestHeader=X-Service-Type, shop-prices
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour la comparaison de prix"
+            rate-limit: "20 req/s"
+            cache-ttl: 600
+            circuit-breaker: shopCircuitBreaker
+            requires-auth: false
+
+        # ============================================================
+        # ROUTE: Gestion du panier
+        # ============================================================
+        - id: shop_cart_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/cart/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/cart
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 40
+                redis-rate-limiter.burstCapacity: 80
+                key-resolver: "#{@userKeyResolver}"
+            - RewritePath=/api/shop/cart(?<segment>/?.*), $\{segment}
+            - AddRequestHeader=X-Service-Type, shop-cart
+            - name: AuthenticatedUserPredicate
+          metadata:
+            response-timeout: 5000
+            connect-timeout: 3000
+            description: "Route pour la gestion du panier"
+            rate-limit: "40 req/s"
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Commandes
+        # ============================================================
+        - id: shop_orders_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/orders/**
+            - Method=GET,POST,PUT
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/orders
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@userKeyResolver}"
+            - RewritePath=/api/shop/orders(?<segment>/?.*), $\{segment}
+            - AddRequestHeader=X-Service-Type, shop-orders
+            - name: AuthenticatedUserPredicate
+          metadata:
+            response-timeout: 8000
+            connect-timeout: 5000
+            description: "Route pour la gestion des commandes"
+            rate-limit: "20 req/s"
+            requires-auth: true
+            required-roles: USER
+
+        # ============================================================
+        # ROUTE: Marchands (Admin/Merchant)
+        # ============================================================
+        - id: shop_merchants_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/merchants/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/merchants
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@userKeyResolver}"
+            - RewritePath=/api/shop/merchants(?<segment>/?.*), $\{segment}
+            - AddRequestHeader=X-Service-Type, shop-merchants
+            - name: RolePredicate
+              args:
+                roles: ADMIN,MERCHANT
+          metadata:
+            response-timeout: 10000
+            connect-timeout: 5000
+            description: "Route pour la gestion des marchands"
+            rate-limit: "30 req/s"
+            requires-auth: true
+            required-roles: ADMIN,MERCHANT
+
+        # ============================================================
+        # ROUTE: Catégories de produits
+        # ============================================================
+        - id: shop_categories_route
+          uri: lb://SHOP-SERVICE
+          predicates:
+            - Path=/api/shop/categories/**
+            - Method=GET
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: shopCircuitBreaker
+                fallbackUri: forward:/fallback/shop/categories
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+            - name: Cache
+              args:
+                enabled: true
+                ttl: 3600
+                cache-key-prefix: "shop:categories"
+            - RewritePath=/api/shop/categories(?<segment>/?.*), $\{segment}
+            - AddRequestHeader=X-Service-Type, shop-categories
+            - AddResponseHeader=X-Cache-Enabled, true
+          metadata:
+            response-timeout: 3000
+            connect-timeout: 2000
+            description: "Route pour les catégories de produits"
+            rate-limit: "100 req/s"
+            cache-ttl: 3600
+            circuit-breaker: shopCircuitBreaker
+            requires-auth: false
+
+# Configuration Resilience4j spécifique au Shop Service
+resilience4j:
+  circuitbreaker:
+    instances:
+      shopCircuitBreaker:
+        slidingWindowSize: 30
+        minimumNumberOfCalls: 15
+        failureRateThreshold: 35.0
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 5
+        slowCallDurationThreshold: 3s
+        slowCallRateThreshold: 40.0
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+  retry:
+    instances:
+      shopRetry:
+        maxAttempts: 2
+        waitDuration: 2s
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+
+# Configuration de cache spécifique
+app:
+  cache:
+    shop:
+      search: 300    # 5 minutes
+      product: 1800  # 30 minutes
+      prices: 600    # 10 minutes
+      categories: 3600 # 1 heure
+      cart: 60       # 1 minute (fréquent changement)
+  rate-limit:
+    shop:
+      search: 30
+      product: 50
+      prices: 20
+      cart: 40
+      orders: 20
+      merchants: 30
+      categories: 100
+      burst-factor: 2.0
+
+# Configuration des fallbacks
+fallback:
+  shop:
+    enabled: true
+    cache-enabled: true
+    default-message: "Le service boutique est temporairement indisponible. Veuillez réessayer plus tard."
+    responses:
+      search:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Le service de recherche de produits est temporairement indisponible.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Vous pouvez essayer une recherche plus simple ou réessayer dans quelques minutes."
+          }
+      product:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Les détails du produit sont temporairement indisponibles.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "productId": "${pathSegments[2]}",
+            "suggestion": "Veuillez réessayer dans quelques minutes ou consulter d'autres produits."
+          }
+      cart:
+        status: 503
+        body: >
+          {
+            "status": 503,
+            "error": "Service Unavailable",
+            "message": "Le service panier est temporairement indisponible.",
+            "timestamp": "${timestamp}",
+            "path": "${path}",
+            "suggestion": "Votre panier a été sauvegardé. Veuillez réessayer dans quelques minutes."
+          }

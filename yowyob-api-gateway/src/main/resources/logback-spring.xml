@@ -6,6 +6,8 @@
 <!-- ============================================ -->
 
 <configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
     <!-- Propriétés chargées depuis Spring -->
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="yowyob-api-gateway"/>
     <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="logs/api-gateway.log"/>
@@ -43,17 +45,19 @@
     </appender>
 
     <!-- Appender JSON (pour ELK Stack) -->
-    <appender name="JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/api-gateway-json.log</file>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"application":"${APP_NAME}","environment":"${PROFILE}"}</customFields>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/archived/api-gateway-json-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-    </appender>
+    <springProfile name="!test">
+        <appender name="JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>logs/api-gateway-json.log</file>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"application":"${APP_NAME}","environment":"${PROFILE}"}</customFields>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>logs/archived/api-gateway-json-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>10MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+        </appender>
+    </springProfile>
 
     <!-- Appender Error (fichier séparé pour les erreurs) -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -76,7 +80,9 @@
     <logger name="com.yowyob.gateway" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
-        <appender-ref ref="JSON"/>
+        <springProfile name="!test">
+            <appender-ref ref="JSON"/>
+        </springProfile>
         <appender-ref ref="ERROR_FILE"/>
     </logger>
 
@@ -94,7 +100,9 @@
     <root level="${LOG_LEVEL}">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
-        <appender-ref ref="JSON"/>
+        <springProfile name="!test">
+            <appender-ref ref="JSON"/>
+        </springProfile>
         <appender-ref ref="ERROR_FILE"/>
     </root>
 
