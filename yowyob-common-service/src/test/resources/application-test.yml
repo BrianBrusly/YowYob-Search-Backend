@@ -1,0 +1,49 @@
+# Configuration pour les tests du module common
+# @author YowYob Team 4GI-ENSPY Promo 2027
+# @author HEUDEP DJANDJA BRIAN B 22P405
+# @version 1.0.0
+
+spring:
+  application:
+    name: yowyob-common-test
+
+logging:
+  level:
+    root: INFO
+    com.yowyob: DEBUG
+
+app:
+  security:
+    jwt:
+      secret: test-secret-key-minimum-256-bits-for-hs256-algorithm-security-testing-purposes
+      expiration-ms: 900000
+      refresh-expiration-ms: 604800000
+      issuer: yowyob-test
+      audience: yowyob-test-clients
+
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: true
+      bcrypt-rounds: 4
+
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+  webclient:
+    connection-timeout: 5000
+    read-timeout: 30000
+    write-timeout: 30000
+    max-connections: 100
+    pending-acquire-timeout: 45000

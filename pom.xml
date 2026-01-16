@@ -9,8 +9,7 @@
  =====================================================================
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
            http://maven.apache.org/POM/4.0.0
            https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
@@ -85,6 +84,13 @@
 
 		<!-- Commons IO -->
 		<commons-io.version>2.13.0</commons-io.version>
+
+		<!-- Pact and its transitive dependencies versions -->
+		<pact.version>4.6.15</pact.version>
+		<ktor.version>2.3.8</ktor.version>
+		<kotlin.version>1.9.25</kotlin.version>
+		<kotlinx-coroutines.version>1.8.1</kotlinx-coroutines.version>
+		<commons-collections4.version>4.4</commons-collections4.version>
 	</properties>
 
 	<!-- ================= DEPENDENCY MANAGEMENT (BOMs UNIQUEMENT) ================= -->
@@ -170,6 +176,73 @@
 				<version>${commons-io.version}</version>
 			</dependency>
 
+			<!-- ================= PACT & TRANSITIVE DEPS ================= -->
+			<dependency>
+				<groupId>au.com.dius.pact.consumer</groupId>
+				<artifactId>junit5</artifactId>
+				<version>${pact.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-collections4</artifactId>
+				<version>${commons-collections4.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>mail</artifactId>
+				<version>1.5.0-b01</version>
+			</dependency>
+
+			<dependency>
+				<groupId>javax.activation</groupId>
+				<artifactId>activation</artifactId>
+				<version>1.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-stdlib</artifactId>
+				<version>${kotlin.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-stdlib-jdk7</artifactId>
+				<version>${kotlin.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jetbrains.kotlinx</groupId>
+				<artifactId>kotlinx-coroutines-core-jvm</artifactId>
+				<version>${kotlinx-coroutines.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.jetbrains.kotlinx</groupId>
+				<artifactId>kotlinx-coroutines-jdk8</artifactId>
+				<version>${kotlinx-coroutines.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.ktor</groupId>
+				<artifactId>ktor-http-jvm</artifactId>
+				<version>${ktor.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.ktor</groupId>
+				<artifactId>ktor-utils-jvm</artifactId>
+				<version>${ktor.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.ktor</groupId>
+				<artifactId>ktor-io-jvm</artifactId>
+				<version>${ktor.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -242,6 +315,7 @@
 							<path>
 								<groupId>org.projectlombok</groupId>
 								<artifactId>lombok</artifactId>
+								<version>${lombok.version}</version>
 							</path>
 							<path>
 								<groupId>org.mapstruct</groupId>

@@ -36,6 +36,7 @@
 	<!-- ============================================================= -->
 	<properties>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
+		<lombok.version>1.18.30</lombok.version>
 	</properties>
 
 	<!-- ============================================================= -->
@@ -49,6 +50,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+		<!-- ================= WEBFLUX ================= -->
+		<!-- AJOUT: Nécessaire pour WebClient et support réactif -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
 		<!-- ================= KAFKA ================= -->
@@ -80,6 +88,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<!-- ================= LOGGING ================= -->
+		<!-- AJOUT: Nécessaire pour @Slf4j de Lombok -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 
 		<!-- ================= JSON ================= -->
@@ -176,6 +191,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- AJOUT: Nécessaire pour tester WebFlux/Reactor -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<!-- ============================================================= -->
@@ -191,9 +213,17 @@
 				<configuration>
 					<release>21</release>
 					<annotationProcessorPaths>
+						<!-- MODIFICATION: Lombok AVANT MapStruct -->
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<!-- AJOUT: Binding Lombok-MapStruct -->
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
 						</path>
 						<path>
 							<groupId>org.mapstruct</groupId>
